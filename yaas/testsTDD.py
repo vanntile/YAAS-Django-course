@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.contrib import auth
 from django.urls import reverse
 from django.utils import timezone
@@ -249,11 +249,12 @@ class EditProfileTests(TestCase):
             print("UC2 fails!")
 
 
+@override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
 class CreateAuctionTests(TestCase):
     """UC3: create auction"""
 
     number_of_passed_tests = 0  # passed tests in this test case
-    tests_amount = 4  # number of tests in this suite
+    tests_amount = 5  # number of tests in this suite
     points = 1  # points granted by this use case if all tests pass
 
     def setUp(self):
@@ -306,6 +307,32 @@ class CreateAuctionTests(TestCase):
         except Exception:
             print("UC3 fails!")
 
+    def test_create_auction_with_invalid_deadline_date_format(self):
+        """
+        Create auction with invalid deadline date format, return error message
+        """
+        userInfo = {
+            "username": "testUser1",
+            "password": "123"
+        }
+
+        data = {
+            "title": "newItem",
+            "description": "something",
+            "minimum_price": 10,
+            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y")
+        }
+        self.client.post(reverse("signin"), userInfo)
+        try:
+            response = self.client.post(reverse("auction:create"), data, follow=True)
+            self.assertIn(b"Enter a valid date/time", response.content)
+
+            # calculate points
+            self.__class__.number_of_passed_tests += 1
+            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
+        except Exception:
+            print("UC3 fails!")
+
     def test_create_auction_with_invalid_minimum_price(self):
         """
         Create auction with invalid minimum price, the auction should not be created, response contains error message
@@ -325,7 +352,7 @@ class CreateAuctionTests(TestCase):
         self.client.post(reverse("signin"), userInfo)
         try:
             response = self.client.post(reverse("auction:create"), data, follow=True)
-            self.assertIn(b"0.01", response.content)
+            self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -396,16 +423,12 @@ class EditAuctionTests(TestCase):
             "password": "321"
         }
 
-        data = {
-            "description": "new content"
-        }
-
         # login to user2 account
         self.client.post(reverse("signup"), user2Info)
         self.client.post(reverse("signin"), user2Info)
         try:
-            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
-            self.assertIn(b"That is not your auction", response.content)
+            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), follow=True)
+            self.assertIn(b"That is not your auction to edit", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -415,21 +438,16 @@ class EditAuctionTests(TestCase):
 
     def test_get_an_auction_successfully(self):
         """
-        An user gets his auction successfully,
+        An user gets his auction successfully, return code 200
         """
         userInfo = {
             "username": "testUser1",
             "password": "123"
         }
 
-        data = {
-            "title": "item1",
-            "description": "new content"
-        }
-
         self.client.post(reverse("signin"), userInfo)
         try:
-            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
+            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), follow=True)
             self.assertEqual(response.status_code, 200)
 
             # calculate points
@@ -481,7 +499,7 @@ class EditAuctionTests(TestCase):
         self.client.post(reverse("signin"), userInfo)
         try:
             response = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
-            self.assertIn(b"Auction updated successfully", response.content)
+            self.assertIn(b"Auction has been updated successfully", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -623,7 +641,7 @@ class BidAuctionTests(TestCase):
 
         try:
             response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo, follow=True)
-            self.assertIn(b"A seller cannot bid on own auctions", response.content)
+            self.assertIn(b"You cannot bid on your own auctions", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -716,7 +734,7 @@ class BidAuctionTests(TestCase):
         try:
             response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo, follow=True)
             self.assertEqual(response.status_code, 200)
-            self.assertContains(response, b"You has bid successfully for the auction")
+            self.assertContains(response, b"You has bid successfully")
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -767,7 +785,7 @@ class BanAuctionTests(TestCase):
 
     def test_normal_user_ban_auction(self):
         """
-        Normal user bans an auction, auction should remain
+        Normal user bans an auction, auction should remain unbanned
         """
         userInfo = {
             "username": "testUser1",
@@ -775,10 +793,11 @@ class BanAuctionTests(TestCase):
         }
         self.client.post(reverse("signin"), userInfo)
         try:
-            self.client.post(reverse("auction:ban", args=(1,)))
+            response1 = self.client.post(reverse("auction:ban", args=(1,)))
             # get a list of active auctions, the testing auction should be in the list
-            response = self.client.get(reverse("auction:index"))
-            self.assertEqual(len(response.context["auctions"]), 1)
+            response2 = self.client.get(reverse("auction:index"))
+            self.assertEqual(response1.status_code, 302)
+            self.assertEqual(len(response2.context["auctions"]), 1)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -859,9 +878,9 @@ class ResolveAuctionTests(TestCase):
 
         self.client.logout()
 
-    def test_resolve_auction_with_bid(self):
+    def test_resolve_auctions(self):
         """
-        Resolve auctions that have bid, the len of list of active auctions should be 0
+        Resolve auctions, the len of list of active auctions should be 0
         """
         try:
             # call the resolve
@@ -891,7 +910,8 @@ class ChangeLanguageTests(TestCase):
         lang_code = "sv"
         try:
             response = self.client.post(reverse("changeLanguage", args=(lang_code,)))
-            self.assertIn(b"Language changed to Swedish", response.content)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"Language has been changed to Swedish", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -907,7 +927,7 @@ class ChangeLanguageTests(TestCase):
         try:
             response = self.client.post(reverse("changeLanguage", args=(lang_code,)))
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Language changed to English", response.content)
+            self.assertIn(b"Language has been changed to English", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -1019,7 +1039,7 @@ class ChangeCurrencyTests(TestCase):
         try:
             response = self.client.post(reverse("changeCurrency", args=(currency_code,)), follow=True)
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Currency changed to USD", response.content)
+            self.assertIn(b"Currency has been changed to USD", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -1032,7 +1052,7 @@ class ChangeCurrencyTests(TestCase):
         try:
             response = self.client.post(reverse("changeCurrency", args=(currency_code,)), follow=True)
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Currency changed to EUR", response.content)
+            self.assertIn(b"Currency has been changed to EUR", response.content)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
