@@ -110,6 +110,22 @@ class SignInTests(TestCase):
         except Exception:
             print("Sign In fails!")
 
+    def test_sign_in_with_invalid_data(self):
+        """
+        Sign in with invalid data, return an unauthenticated user
+        """
+        userInfo = {
+            "username": "testUser2",
+            "password": "321"
+        }
+
+        try:
+            self.client.post(reverse("signin"), userInfo)
+            user = auth.get_user(self.client)
+            self.assertFalse(user.is_authenticated)
+        except Exception:
+            print("Sign In fails!")
+
 
 class EditProfileTests(TestCase):
     """UC2: edit user"""
