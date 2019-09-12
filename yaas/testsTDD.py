@@ -2,6 +2,7 @@ from django.test import TestCase, override_settings
 from django.contrib import auth
 from django.urls import reverse
 from django.utils import timezone
+from django.core import mail
 from rest_framework.test import APIClient
 from freezegun import freeze_time
 
@@ -254,16 +255,16 @@ class CreateAuctionTests(TestCase):
     """UC3: create auction"""
 
     number_of_passed_tests = 0  # passed tests in this test case
-    tests_amount = 5  # number of tests in this suite
+    tests_amount = 6  # number of tests in this suite
     points = 1  # points granted by this use case if all tests pass
 
     def setUp(self):
-        userInfo = {
+        self.userInfo = {
             "username": "testUser1",
             "password": "123"
         }
         # create a user for testing
-        self.client.post(reverse("signup"), userInfo)
+        self.client.post(reverse("signup"), self.userInfo)
         self.client.logout()  # because the signup function would signin the user
 
     def test_create_auction_with_unauthenticated_user(self):
@@ -284,11 +285,6 @@ class CreateAuctionTests(TestCase):
         """
         Create auction with deadline date is earlier than current date, show error message
         """
-        userInfo = {
-            "username": "testUser1",
-            "password": "123"
-        }
-
         data = {
             "title": "newItem",
             "description": "something",
@@ -296,7 +292,7 @@ class CreateAuctionTests(TestCase):
             "deadline_date": (timezone.now() - timezone.timedelta(hours=24)).strftime("%d.%m.%Y %H:%M:%S")  # 1 day ago
         }
 
-        self.client.post(reverse("signin"), userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
         try:
             response = self.client.post(reverse("auction:create"), data, follow=True)
             self.assertIn(b"The deadline date should be at least 72 hours from now", response.content)
@@ -337,11 +333,6 @@ class CreateAuctionTests(TestCase):
         """
         Create auction with invalid minimum price, the auction should not be created, response contains error message
         """
-        userInfo = {
-            "username": "testUser1",
-            "password": "123"
-        }
-
         data = {
             "title": "newItem",
             "description": "something",
@@ -349,7 +340,7 @@ class CreateAuctionTests(TestCase):
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
 
-        self.client.post(reverse("signin"), userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
         try:
             response = self.client.post(reverse("auction:create"), data, follow=True)
             self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
@@ -364,18 +355,13 @@ class CreateAuctionTests(TestCase):
         """
         Create auction with valid data, show success message.
         """
-        userInfo = {
-            "username": "testUser1",
-            "password": "123"
-        }
-
         data = {
             "title": "newItem",
             "description": "something",
             "minimum_price": 10,
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
-        self.client.post(reverse("signin"), userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
         try:
             response = self.client.post(reverse("auction:create"), data, follow=True)
             self.assertEqual(response.status_code, 200)
@@ -384,6 +370,36 @@ class CreateAuctionTests(TestCase):
             # calculate points
             self.__class__.number_of_passed_tests += 1
             calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
+        except Exception:
+            print("UC3 fails!")
+
+    def test_create_auction_with_sending_email(self):
+        """
+        Create auction with valid data and user has an email, show success message and an email is in outbox.
+        """
+        data = {
+            "title": "newItem",
+            "description": "something",
+            "minimum_price": 10,
+            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
+        }
+        self.client.post(reverse("signin"), self.userInfo)
+        try:
+            user = auth.get_user(self.client)
+            user.email = "user@mail.com"
+            user.save()
+
+            response = self.client.post(reverse("auction:create"), data, follow=True)
+
+            if user.email:
+                self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, b"Auction has been created successfully")
+
+            # calculate points
+            self.__class__.number_of_passed_tests += 1
+            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points,
+                             "UC3")
         except Exception:
             print("UC3 fails!")
 
@@ -423,11 +439,15 @@ class EditAuctionTests(TestCase):
             "password": "321"
         }
 
+        data = {
+            "description": "new content"
+        }
+
         # login to user2 account
         self.client.post(reverse("signup"), user2Info)
         self.client.post(reverse("signin"), user2Info)
         try:
-            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), follow=True)
+            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
             self.assertIn(b"That is not your auction to edit", response.content)
 
             # calculate points
@@ -569,57 +589,48 @@ class BidAuctionTests(TestCase):
     """UC6: bid"""
 
     number_of_passed_tests = 0  # passed tests in this test case
-    tests_amount = 5  # number of tests in this suite
+    tests_amount = 6  # number of tests in this suite
     points = 3  # points granted by this use case if all tests pass
 
     def setUp(self):
-        user1Info = {
+        self.user1Info = {
             "username": "testUser1",
             "password": "123"
         }
 
-        adminInfo = {
-            "username": "admin",
-            "password": "admin"
+        self.user2Info = {
+            "username": "testUser2",
+            "password": "321"
         }
 
-        activeItemInfo = {
+        item1Info = {
             "title": "item1",
             "description": "something",
-            "minimum_price": 10,
+            "minimum_price": 8,
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
-        }
-        bannedItemInfo = {
-            "title": "item2",
-            "description": "something",
-            "minimum_price": 15,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=8)).strftime("%d.%m.%Y %H:%M:%S")
         }
 
         # create a user and an auction
-        self.client.post(reverse("signup"), user1Info)
-        self.client.post(reverse("signin"), user1Info)
-        self.client.post(reverse("auction:create"), activeItemInfo)
-        self.client.post(reverse("auction:create"), bannedItemInfo)
-        # create an admin user
-        self.client.post(reverse("signup"), adminInfo)
-        self.client.post(reverse("signin"), adminInfo)
-        try:
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
-        except NotImplementedError:
-            print("UC6 fails!!")
+        self.client.post(reverse("signup"), self.user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
+        self.client.post(reverse("auction:create"), item1Info)
+        # create an auction in the past
+        with freeze_time("2019-9-5"):
+            item2Info = {
+                "title": "item2",
+                "description": "something",
+                "minimum_price": 10,
+                "deadline_date": (timezone.now() + timezone.timedelta(days=4)).strftime("%d.%m.%Y %H:%M:%S")
+            }
+            self.client.post(reverse("auction:create"), item2Info)
 
         # common variables
-        self.active_item_id = 1
-        self.banned_item_id = 2
+        self.item1_id = 1
+        self.item2_id = 2
 
-        # ban 1 item
-        try:
-            self.client.post(reverse("auction:ban", args=(self.banned_item_id,)))
-        except ValueError:
-            print("UC6 fails!!!")
+        user1 = auth.get_user(self.client)
+        user1.email = "user1@mail.com"
+        user1.save()
 
         self.client.logout()
 
@@ -627,20 +638,16 @@ class BidAuctionTests(TestCase):
         """
         A seller bid on own auction, response contains error message
         """
-        user1Info = {
-            "username": "testUser1",
-            "password": "123"
-        }
         # signup and signin to other user to bid
-        self.client.post(reverse("signup"), user1Info)
-        self.client.post(reverse("signin"), user1Info)
+        self.client.post(reverse("signup"), self.user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
 
         bidInfo = {
             "newBid": 12
         }
 
         try:
-            response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo, follow=True)
+            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
             self.assertIn(b"You cannot bid on your own auctions", response.content)
 
             # calculate points
@@ -653,13 +660,12 @@ class BidAuctionTests(TestCase):
         """
         Unauthenticated user bid on an auction, return code 302 redirect
         """
-
         bidInfo = {
             "newBid": 12
         }
 
         try:
-            response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo)
+            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
             self.assertEqual(response.status_code, 302)
 
             # calculate points
@@ -672,15 +678,51 @@ class BidAuctionTests(TestCase):
         """
         Bid on an inactive auction, bid value does not change, return error message
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
+        adminInfo = {
+            "username": "admin",
+            "password": "admin"
+        }
+
+        bidInfo = {
+            "newBid": 12
+        }
+
+        # create an admin user
+        self.client.post(reverse("signup"), adminInfo)
+        self.client.post(reverse("signin"), adminInfo)
+        try:
+            adm = auth.get_user(self.client)
+            adm.is_superuser = True
+            adm.save()
+
+            # ban 1 item
+            self.client.post(reverse("auction:ban", args=(self.item1_id,)))
+
+            # signup and signin to other user to bid
+            self.client.post(reverse("signup"), self.user2Info)
+            self.client.post(reverse("signin"), self.user2Info)
+
+            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
+            self.assertIn(b"You can only bid on active auction", response.content)
+
+            # calculate points
+            self.__class__.number_of_passed_tests += 1
+            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
+        except Exception:
+            print("UC6 fails!")
+
+    def test_bid_on_outdated_auction(self):
+        """
+        Bid on an auction that has outdated deadline date,  return error message
+        """
+        bidInfo = {
+            "newBid": 12
         }
         # signup and signin to other user to bid
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
         try:
-            response = self.client.post(reverse("auction:bid", args=(self.banned_item_id,)), follow=True)
+            response = self.client.post(reverse("auction:bid", args=(self.item2_id,)), bidInfo, follow=True)
             self.assertIn(b"You can only bid on active auction", response.content)
 
             # calculate points
@@ -693,20 +735,16 @@ class BidAuctionTests(TestCase):
         """
         Bid on an auction with invalid amount, should return error message
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         # signup and signin to other user to bid
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
 
         bidInfo = {
-            "newBid": 9
+            "newBid": 8
         }
 
         try:
-            response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo, follow=True)
+            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
             self.assertIn(b"New bid must be greater than the current bid for at least 0.01", response.content)
 
             # calculate points
@@ -719,21 +757,23 @@ class BidAuctionTests(TestCase):
         """
         Bid on an auction with valid data, response contains success message
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         # signup and signin to other user to bid
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
+
+        user2 = auth.get_user(self.client)
+        user2.email = "user2@mail.com"
+        user2.save()
 
         bidInfo = {
             "newBid": 12
         }
 
         try:
-            response = self.client.post(reverse("auction:bid", args=(self.active_item_id,)), bidInfo, follow=True)
+            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
+
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(mail.outbox), 2)  # send 2 emails to seller and bidder
             self.assertContains(response, b"You has bid successfully")
 
             # calculate points
@@ -751,29 +791,33 @@ class BanAuctionTests(TestCase):
     points = 1  # points granted by this use case if all tests pass
 
     def setUp(self):
-        userInfo = {
+        self.userInfo = {
             "username": "testUser1",
             "password": "123"
         }
 
-        adminInfo = {
+        self.adminInfo = {
             "username": "admin",
             "password": "admin"
         }
-
         data = {
             "title": "item1",
             "description": "something",
             "minimum_price": 10,
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
+
         # create a user and an auction
-        self.client.post(reverse("signup"), userInfo)
-        self.client.post(reverse("signin"), userInfo)
+        self.client.post(reverse("signup"), self.userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
         self.client.post(reverse("auction:create"), data)
+        # make an email for user
+        user1 = auth.get_user(self.client)
+        user1.email = "user1@mail.com"
+        user1.save()
         # create an admin user
-        self.client.post(reverse("signup"), adminInfo)
-        self.client.post(reverse("signin"), adminInfo)
+        self.client.post(reverse("signup"), self.adminInfo)
+        self.client.post(reverse("signin"), self.adminInfo)
         try:
             adm = auth.get_user(self.client)
             adm.is_superuser = True
@@ -787,11 +831,7 @@ class BanAuctionTests(TestCase):
         """
         Normal user bans an auction, auction should remain unbanned
         """
-        userInfo = {
-            "username": "testUser1",
-            "password": "123"
-        }
-        self.client.post(reverse("signin"), userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
         try:
             response1 = self.client.post(reverse("auction:ban", args=(1,)))
             # get a list of active auctions, the testing auction should be in the list
@@ -809,16 +849,13 @@ class BanAuctionTests(TestCase):
         """
         Admin user bans an auction, auction should be banned
         """
-        adminInfo = {
-            "username": "admin",
-            "password": "admin"
-        }
-        self.client.post(reverse("signin"), adminInfo)
+        self.client.post(reverse("signin"), self.adminInfo)
         try:
             self.client.post(reverse("auction:ban", args=(1,)))
             # get a list of active auctions, the testing auction should not be in the list
             response = self.client.get(reverse("auction:index"))
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(len(response.context["auctions"]), 0)
 
             # calculate points
@@ -866,6 +903,10 @@ class ResolveAuctionTests(TestCase):
             }
             self.client.post(reverse("auction:create"), item1Info)
             self.client.post(reverse("auction:create"), item2Info)
+        # make an email for user1
+        user1 = auth.get_user(self.client)
+        user1.email = "user1@mail.com"
+        user1.save()
 
         # create user2 to bid on item1
         self.client.post(reverse("signup"), self.user2Info)
@@ -887,6 +928,7 @@ class ResolveAuctionTests(TestCase):
             self.client.post(reverse("auction:resolve"))
             # check if the auction is not in the list of active auctions
             response = self.client.get(reverse("auction:index"))
+            self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(len(response.context["auctions"]), 0)
 
             # calculate points
@@ -1194,9 +1236,13 @@ class BidAuctionApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         # create user for testing purpose
-        user1Info = {
+        self.user1Info = {
             "username": "testUser1",
             "password": "123"
+        }
+        self.user2Info = {
+            "username": "testUser2",
+            "password": "321"
         }
 
         adminInfo = {
@@ -1218,28 +1264,32 @@ class BidAuctionApiTests(TestCase):
         }
 
         # create a user and an auction
-        self.client.post(reverse("signup"), user1Info)
-        self.client.post(reverse("signin"), user1Info)
+        self.client.post(reverse("signup"), self.user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
+        # make an email for the user1
+        user1 = auth.get_user(self.client)
+        user1.email = "user1@mail.com"
+        user1.save()
+
         self.client.post(reverse("auction:create"), activeItemInfo)
         self.client.post(reverse("auction:create"), bannedItemInfo)
         # create an admin user
         self.client.post(reverse("signup"), adminInfo)
         self.client.post(reverse("signin"), adminInfo)
-        try:
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
-        except NotImplementedError:
-            print("WS2 fails")
 
         # common variables
         self.active_item_id = 1
         self.banned_item_id = 2
-        # ban 1 item
+
         try:
+            adm = auth.get_user(self.client)
+            adm.is_superuser = True
+            adm.save()
+
+            # ban 1 item
             self.client.post(reverse("auction:ban", args=(self.banned_item_id,)))
-        except ValueError:
-            print("WS2 fails")
+        except (NotImplementedError, ValueError):
+            print("WS2 fails!")
 
         self.client.logout()
 
@@ -1247,14 +1297,10 @@ class BidAuctionApiTests(TestCase):
         """
         Bid on own auction, return error code 400
         """
-        user1Info = {
-            "username": "testUser1",
-            "password": "123"
-        }
         data = {
             "bid": 12
         }
-        self.client.post(reverse("signin"), user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
         try:
             response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
@@ -1271,15 +1317,11 @@ class BidAuctionApiTests(TestCase):
         """
         Bid on banned auction, return code 400
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         data = {
             "bid": 12
         }
-        self.client.post(reverse("signin"), user2Info)
-        self.client.post(reverse("signup"), user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
         try:
             response = self.client.post(reverse("bidauctionapi", args=(self.banned_item_id,)), data)
@@ -1296,15 +1338,11 @@ class BidAuctionApiTests(TestCase):
         """
         Bid with a new bid is the same with the old bid, return code 400
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         data = {
             "bid": 10
         }
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
         try:
             response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
@@ -1321,15 +1359,11 @@ class BidAuctionApiTests(TestCase):
         """
         Bid with invalid data, return code 400
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         data = {
             "bid": "text"
         }
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
         try:
             response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
@@ -1345,19 +1379,20 @@ class BidAuctionApiTests(TestCase):
         """
         Bid on other auction successfully, return code 200
         """
-        user2Info = {
-            "username": "testUser2",
-            "password": "321"
-        }
         data = {
             "bid": 12
         }
-        self.client.post(reverse("signup"), user2Info)
-        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
+        # make an email for user2
+        user2 = auth.get_user(self.client)
+        user2.email = "user2@mail.com"
+        user2.save()
         self.client.force_authenticate(user=auth.get_user(self.client))
         try:
             response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
             self.assertEqual(response.status_code, 200)
+            self.assertGreaterEqual(len(mail.outbox), 2)
             self.assertIn("Bid successfully", response.data["message"])
 
             # calculate points
