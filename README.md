@@ -5,7 +5,7 @@ This is a tutorial how to setup and use the framework.
 ## Settings
 
 First thing first, you need to check all packages in the `requirements.txt` file. 
-They should be automatically detect and install by Python Interpreter.
+They should be automatically detected and installed by Python Interpreter.
 
 There are some attributes in `settings.py` file that you need to pay attention.
 
