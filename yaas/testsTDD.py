@@ -1527,6 +1527,8 @@ class BidAuctionApiTests(TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(mail.outbox), 5)  # notify seller and bidder
             self.assertIn("Bid successfully", response.data["message"])
+            self.assertEqual(response.data["title"], "item1")
+            self.assertEqual(response.data["current_price"], 12)
 
             # calculate points
             self.__class__.number_of_passed_tests += 1
