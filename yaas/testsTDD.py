@@ -38,19 +38,20 @@ class SignUpTests(TestCase):
     tests_amount = 5  # number of tests in this suite
     points = 1  # points granted by this use case if all tests pass
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC1")
+
     def test_get_sign_up_form(self):
         """
         Get signup form, return status code 200
         """
-        try:
-            response = self.client.get(reverse("signup"))
-            self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse("signup"))
+        self.assertEqual(response.status_code, 200)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC1")
-        except Exception:
-            print("UC1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_sign_up_with_invalid_data(self):
         """
@@ -61,15 +62,11 @@ class SignUpTests(TestCase):
             "username": "testUser3",
         }
 
-        try:
-            response = self.client.post(reverse("signup"), context)
-            self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse("signup"), context)
+        self.assertEqual(response.status_code, 200)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC1")
-        except Exception:
-            print("UC1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_sign_up_with_valid_data(self):
         """
@@ -82,15 +79,11 @@ class SignUpTests(TestCase):
             "email": "user1@mail.com"
         }
 
-        try:
-            response = self.client.post(reverse("signup"), context)
-            self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse("signup"), context)
+        self.assertEqual(response.status_code, 302)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC1")
-        except Exception:
-            print("UC1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_sign_up_with_invalid_username(self):
         """
@@ -103,18 +96,14 @@ class SignUpTests(TestCase):
             "email": "user1@mail.com"
         }
 
-        try:
-            response1 = self.client.post(reverse("signup"), context)
-            # create another user with the same username
-            response2 = self.client.post(reverse("signup"), context)
-            self.assertEqual(response2.status_code, 400)
-            self.assertIn(b"This username has been taken", response2.content)
+        response1 = self.client.post(reverse("signup"), context)
+        # create another user with the same username
+        response2 = self.client.post(reverse("signup"), context)
+        self.assertEqual(response2.status_code, 400)
+        self.assertIn(b"This username has been taken", response2.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC1")
-        except Exception:
-            print("UC1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_sign_up_with_invalid_email(self):
         """
@@ -132,18 +121,14 @@ class SignUpTests(TestCase):
             "email": "user1@mail.com"
         }
 
-        try:
-            response1 = self.client.post(reverse("signup"), user1Info)
-            # create another user with the same username
-            response2 = self.client.post(reverse("signup"), user2Info)
-            self.assertEqual(response2.status_code, 400)
-            self.assertIn(b"This email has been taken", response2.content)
+        response1 = self.client.post(reverse("signup"), user1Info)
+        # create another user with the same username
+        response2 = self.client.post(reverse("signup"), user2Info)
+        self.assertEqual(response2.status_code, 400)
+        self.assertIn(b"This email has been taken", response2.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC1")
-        except Exception:
-            print("UC1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class SignInTests(TestCase):
@@ -166,12 +151,9 @@ class SignInTests(TestCase):
             "password": "123"
         }
 
-        try:
-            self.client.post(reverse("signin"), userInfo)
-            user = auth.get_user(self.client)
-            self.assertTrue(user.is_authenticated)
-        except Exception:
-            print("Sign In fails!")
+        self.client.post(reverse("signin"), userInfo)
+        user = auth.get_user(self.client)
+        self.assertTrue(user.is_authenticated)
 
     def test_sign_in_with_invalid_data(self):
         """
@@ -182,12 +164,9 @@ class SignInTests(TestCase):
             "password": "321"
         }
 
-        try:
-            self.client.post(reverse("signin"), userInfo)
-            user = auth.get_user(self.client)
-            self.assertFalse(user.is_authenticated)
-        except Exception:
-            print("Sign In fails!")
+        self.client.post(reverse("signin"), userInfo)
+        user = auth.get_user(self.client)
+        self.assertFalse(user.is_authenticated)
 
 
 class EditProfileTests(TestCase):
@@ -213,19 +192,20 @@ class EditProfileTests(TestCase):
         self.client.post(reverse("signup"), self.user2Info)
         self.client.logout()
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC2")
+
     def test_get_profile_of_unauthenticated_user(self):
         """
         Get detail of unauthenticated user, return code 302 and redirect to signin page
         """
-        try:
-            response = self.client.get(reverse("user:editprofile"))
-            self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse("user:editprofile"))
+        self.assertEqual(response.status_code, 302)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC2")
-        except Exception:
-            print("UC2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_get_profile_of_authenticated_user(self):
         """
@@ -233,15 +213,11 @@ class EditProfileTests(TestCase):
         """
         self.client.post(reverse("signin"), self.user1Info)
 
-        try:
-            response = self.client.get(reverse("user:editprofile"))
-            self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse("user:editprofile"))
+        self.assertEqual(response.status_code, 200)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC2")
-        except Exception:
-            print("UC2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_edit_email_and_password_of_an_authenticated_user(self):
         """
@@ -254,17 +230,13 @@ class EditProfileTests(TestCase):
         }
         self.client.post(reverse("signin"), self.user1Info)
 
-        try:
-            response = self.client.post(reverse("user:editprofile"), data)
-            user = auth.get_user(self.client)
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(user.email, "newemail@dot.com")
+        response = self.client.post(reverse("user:editprofile"), data)
+        user = auth.get_user(self.client)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(user.email, "newemail@dot.com")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC2")
-        except Exception:
-            print("UC2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_edit_email_that_already_taken(self):
         """
@@ -281,15 +253,11 @@ class EditProfileTests(TestCase):
 
         # get user1 and check if its email still stays the same
         user1 = auth.get_user(self.client)
-        try:
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(user1.email, "user1@yaas.com")  # stays the same as old email
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(user1.email, "user1@yaas.com")  # stays the same as old email
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC2")
-        except Exception:
-            print("UC2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 @override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
@@ -310,36 +278,33 @@ class CreateAuctionTests(TestCase):
         self.client.post(reverse("signup"), self.userInfo)
         self.client.logout()  # because the signup function would signin the user
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC3")
+
     def test_get_create_auction_form(self):
         """
         REQ3.1
         Get create auction form, return code 200
         """
-        try:
-            self.client.post(reverse("signin"), self.userInfo)
-            response = self.client.get(reverse("auction:create"))
-            self.assertEqual(response.status_code, 200)
+        self.client.post(reverse("signin"), self.userInfo)
+        response = self.client.get(reverse("auction:create"))
+        self.assertEqual(response.status_code, 200)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_unauthenticated_user(self):
         """
         REQ3.1
         Create an auction with an unauthenticated user, should return a redirection status.
         """
-        try:
-            response = self.client.post(reverse("auction:create"))
-            self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse("auction:create"))
+        self.assertEqual(response.status_code, 302)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_invalid_deadline_date(self):
         """
@@ -354,15 +319,11 @@ class CreateAuctionTests(TestCase):
         }
 
         self.client.post(reverse("signin"), self.userInfo)
-        try:
-            response = self.client.post(reverse("auction:create"), data, follow=True)
-            self.assertIn(b"The deadline date should be at least 72 hours from now", response.content)
+        response = self.client.post(reverse("auction:create"), data, follow=True)
+        self.assertIn(b"The deadline date should be at least 72 hours from now", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_invalid_deadline_date_format(self):
         """
@@ -376,15 +337,11 @@ class CreateAuctionTests(TestCase):
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y")
         }
         self.client.post(reverse("signin"), self.userInfo)
-        try:
-            response = self.client.post(reverse("auction:create"), data, follow=True)
-            self.assertIn(b"Enter a valid date/time", response.content)
+        response = self.client.post(reverse("auction:create"), data, follow=True)
+        self.assertIn(b"Enter a valid date/time", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_invalid_minimum_price(self):
         """
@@ -399,15 +356,11 @@ class CreateAuctionTests(TestCase):
         }
 
         self.client.post(reverse("signin"), self.userInfo)
-        try:
-            response = self.client.post(reverse("auction:create"), data, follow=True)
-            self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
+        response = self.client.post(reverse("auction:create"), data, follow=True)
+        self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_valid_data(self):
         """
@@ -421,16 +374,12 @@ class CreateAuctionTests(TestCase):
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
         self.client.post(reverse("signin"), self.userInfo)
-        try:
-            response = self.client.post(reverse("auction:create"), data, follow=True)
-            self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
-            self.assertContains(response, b"Auction has been created successfully")
+        response = self.client.post(reverse("auction:create"), data, follow=True)
+        self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
+        self.assertContains(response, b"Auction has been created successfully")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_create_auction_with_sending_email(self):
         """
@@ -444,19 +393,14 @@ class CreateAuctionTests(TestCase):
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
         self.client.post(reverse("signin"), self.userInfo)
-        try:
-            response = self.client.post(reverse("auction:create"), data, follow=True)
+        response = self.client.post(reverse("auction:create"), data, follow=True)
 
-            self.assertEqual(len(mail.outbox), 1)  # notify seller
-            self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
-            self.assertContains(response, b"Auction has been created successfully")
+        self.assertEqual(len(mail.outbox), 1)  # notify seller
+        self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
+        self.assertContains(response, b"Auction has been created successfully")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points,
-                             "UC3")
-        except Exception:
-            print("UC3 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class EditAuctionTests(TestCase):
@@ -491,6 +435,11 @@ class EditAuctionTests(TestCase):
         self.auction_id = 1
         self.client.logout()
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC4")
+
     def test_get_an_auction_of_other_user(self):
         """
         REQ4.1
@@ -503,15 +452,12 @@ class EditAuctionTests(TestCase):
         # login to user2 account
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
-        try:
-            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
-            self.assertIn(b"That is not your auction to edit", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC4")
-        except Exception:
-            print("UC4 fails!")
+        response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
+        self.assertIn(b"That is not your auction to edit", response.content)
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_get_an_auction_successfully(self):
         """
@@ -520,15 +466,11 @@ class EditAuctionTests(TestCase):
         """
 
         self.client.post(reverse("signin"), self.user1Info)
-        try:
-            response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), follow=True)
-            self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse("auction:edit", args=(self.auction_id,)), follow=True)
+        self.assertEqual(response.status_code, 200)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC4")
-        except Exception:
-            print("UC4 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_edit_an_auction_of_other_user(self):
         """
@@ -542,15 +484,12 @@ class EditAuctionTests(TestCase):
         # login to user2 account
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
-        try:
-            response = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
-            self.assertIn(b"That is not your auction", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC4")
-        except Exception:
-            print("UC4 fails!")
+        response = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
+        self.assertIn(b"That is not your auction", response.content)
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_edit_auction_with_valid_description(self):
         """
@@ -563,16 +502,12 @@ class EditAuctionTests(TestCase):
         }
 
         self.client.post(reverse("signin"), self.user1Info)
-        try:
-            response = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
-            self.assertEqual(response.redirect_chain[0][1], 302)
-            self.assertContains(response, b"Auction has been updated successfully")
+        response = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data, follow=True)
+        self.assertEqual(response.redirect_chain[0][1], 302)
+        self.assertContains(response, b"Auction has been updated successfully")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC4")
-        except Exception:
-            print("UC4 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BrowseAndSearchTests(TestCase):
@@ -601,21 +536,22 @@ class BrowseAndSearchTests(TestCase):
         self.client.post(reverse("auction:create"), data)
         self.client.logout()
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC5")
+
     def test_browse_for_active_auctions(self):
         """
         REQ5.1 & REQ5.3
         Test browse for active auctions, should return a list of active auctions
         """
-        try:
-            response = self.client.get(reverse("auction:index"))
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context["auctions"]), 1)
+        response = self.client.get(reverse("auction:index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["auctions"]), 1)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC5")
-        except Exception:
-            print("UC5 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_search_for_auctions_by_title(self):
         """
@@ -625,16 +561,12 @@ class BrowseAndSearchTests(TestCase):
         args = {
             "term": "item1"
         }
-        try:
-            response = self.client.get(reverse("auction:search"), args)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.context["auctions"]), 1)
+        response = self.client.get(reverse("auction:search"), args)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["auctions"]), 1)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC5")
-        except Exception:
-            print("UC5 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BidAuctionTests(TestCase):
@@ -684,6 +616,11 @@ class BidAuctionTests(TestCase):
 
         self.client.logout()
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC6")
+
     def test_bid_by_unauthenticated_user(self):
         """
         REQ6.1
@@ -693,15 +630,11 @@ class BidAuctionTests(TestCase):
             "new_price": 12
         }
 
-        try:
-            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
-            self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
+        self.assertEqual(response.status_code, 302)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_by_its_seller(self):
         """
@@ -712,20 +645,16 @@ class BidAuctionTests(TestCase):
             "new_price": 12
         }
 
-        try:
-            # signup and signin to other user to bid
-            self.client.post(reverse("signup"), self.user1Info)
-            self.client.post(reverse("signin"), self.user1Info)
+        # signup and signin to other user to bid
+        self.client.post(reverse("signup"), self.user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
 
-            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"You cannot bid on your own auctions", response.content)
+        response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"You cannot bid on your own auctions", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_on_inactive_auction(self):
         """
@@ -745,27 +674,24 @@ class BidAuctionTests(TestCase):
         # create an admin user
         self.client.post(reverse("signup"), adminInfo)
         self.client.post(reverse("signin"), adminInfo)
-        try:
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
 
-            # ban 1 item
-            self.client.post(reverse("auction:ban", args=(self.item1_id,)))
+        adm = auth.get_user(self.client)
+        adm.is_superuser = True
+        adm.save()
 
-            # signup and signin to other user to bid
-            self.client.post(reverse("signup"), self.user2Info)
-            self.client.post(reverse("signin"), self.user2Info)
+        # ban 1 item
+        self.client.post(reverse("auction:ban", args=(self.item1_id,)))
 
-            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"You can only bid on active auction", response.content)
+        # signup and signin to other user to bid
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"You can only bid on active auction", response.content)
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_on_outdated_auction(self):
         """
@@ -778,16 +704,13 @@ class BidAuctionTests(TestCase):
         # signup and signin to other user to bid
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
-        try:
-            response = self.client.post(reverse("auction:bid", args=(self.item2_id,)), bidInfo)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"You can only bid on active auction", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        response = self.client.post(reverse("auction:bid", args=(self.item2_id,)), bidInfo)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"You can only bid on active auction", response.content)
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_with_invalid_amount(self):
         """
@@ -802,16 +725,12 @@ class BidAuctionTests(TestCase):
             "new_price": 8
         }
 
-        try:
-            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"New bid must be greater than the current bid for at least 0.01", response.content)
+        response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"New bid must be greater than the current bid for at least 0.01", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_with_valid_data(self):
         """
@@ -821,23 +740,20 @@ class BidAuctionTests(TestCase):
         bidInfo = {
             "new_price": 12
         }
-        try:
-            # signup and signin to other user to bid
-            self.client.post(reverse("signup"), self.user2Info)
-            self.client.post(reverse("signin"), self.user2Info)
 
-            response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
-            self.assertEqual(response.redirect_chain[0][1], 302)
-            # 2 mails sent to seller when create 2 auctions
-            # 2 mails sent to seller and bidder when bid
-            self.assertEqual(len(mail.outbox), 4)
-            self.assertContains(response, b"You has bid successfully")
+        # signup and signin to other user to bid
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC6")
-        except Exception:
-            print("UC6 fails!")
+        response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
+        self.assertEqual(response.redirect_chain[0][1], 302)
+        # 2 mails sent to seller when create 2 auctions
+        # 2 mails sent to seller and bidder when bid
+        self.assertEqual(len(mail.outbox), 4)
+        self.assertContains(response, b"You has bid successfully")
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BanAuctionTests(TestCase):
@@ -866,43 +782,41 @@ class BanAuctionTests(TestCase):
             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
         }
 
-        try:
-            # create a user and an auction
-            self.client.post(reverse("signup"), self.userInfo)
-            self.client.post(reverse("signin"), self.userInfo)
-            self.client.post(reverse("auction:create"), data)
+        # create a user and an auction
+        self.client.post(reverse("signup"), self.userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
+        self.client.post(reverse("auction:create"), data)
 
-            # create an admin user
-            self.client.post(reverse("signup"), self.adminInfo)
-            self.client.post(reverse("signin"), self.adminInfo)
+        # create an admin user
+        self.client.post(reverse("signup"), self.adminInfo)
+        self.client.post(reverse("signin"), self.adminInfo)
 
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
-        except NotImplementedError:
-            print("UC7 fails")
+        adm = auth.get_user(self.client)
+        adm.is_superuser = True
+        adm.save()
 
         self.client.logout()
+
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC7")
 
     def test_normal_user_ban_auction(self):
         """
         REQ7.1
         Normal user bans an auction, auction should remain unbanned
         """
-        try:
-            self.client.post(reverse("signin"), self.userInfo)
+        self.client.post(reverse("signin"), self.userInfo)
 
-            response1 = self.client.post(reverse("auction:ban", args=(1,)))
-            # get a list of active auctions, the testing auction should be in the list
-            response2 = self.client.get(reverse("auction:index"))
-            self.assertEqual(response1.status_code, 302)
-            self.assertEqual(len(response2.context["auctions"]), 1)
+        response1 = self.client.post(reverse("auction:ban", args=(1,)))
+        # get a list of active auctions, the testing auction should be in the list
+        response2 = self.client.get(reverse("auction:index"))
+        self.assertEqual(response1.status_code, 302)
+        self.assertEqual(len(response2.context["auctions"]), 1)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC7")
-        except Exception:
-            print("UC7 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_admin_ban_auction(self):
         """
@@ -914,30 +828,26 @@ class BanAuctionTests(TestCase):
             "password": "321",
             "email": "user2@mail.com"
         }
-        try:
-            self.client.post(reverse("signup"), user2Info)
-            self.client.post(reverse("signin"), user2Info)
-            self.client.post(reverse("auction:bid", args=(1,)), {"new_price": 12})
+        self.client.post(reverse("signup"), user2Info)
+        self.client.post(reverse("signin"), user2Info)
+        self.client.post(reverse("auction:bid", args=(1,)), {"new_price": 12})
 
-            self.client.post(reverse("signin"), self.adminInfo)
+        self.client.post(reverse("signin"), self.adminInfo)
 
-            ban_response = self.client.post(reverse("auction:ban", args=(1,)), follow=True)
-            # get a list of active auctions, the testing auction should not be in the list
-            browse_response = self.client.get(reverse("auction:index"))
+        ban_response = self.client.post(reverse("auction:ban", args=(1,)), follow=True)
+        # get a list of active auctions, the testing auction should not be in the list
+        browse_response = self.client.get(reverse("auction:index"))
 
-            self.assertEqual(ban_response.redirect_chain[0][1], 302)  # check redirecting
-            self.assertIn(b"Ban successfully", ban_response.content)
-            # 1 mail sent to seller after create auction
-            # 2 mails sent to seller and bidder after bid
-            # 2 other mails sent to seller and bidder to notify it being banned
-            self.assertEqual(len(mail.outbox), 5)
-            self.assertEqual(len(browse_response.context["auctions"]), 0)
+        self.assertEqual(ban_response.redirect_chain[0][1], 302)  # check redirecting
+        self.assertIn(b"Ban successfully", ban_response.content)
+        # 1 mail sent to seller after create auction
+        # 2 mails sent to seller and bidder after bid
+        # 2 other mails sent to seller and bidder to notify it being banned
+        self.assertEqual(len(mail.outbox), 5)
+        self.assertEqual(len(browse_response.context["auctions"]), 0)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC7")
-        except Exception:
-            print("UC7 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class ResolveAuctionTests(TestCase):
@@ -984,76 +894,71 @@ class ResolveAuctionTests(TestCase):
         # create user2 to bid on item1
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
-        try:
-            with freeze_time("2019-9-6"):
-                self.client.post(reverse("auction:bid", args=(1,)), {"new_price": 12}, follow=True)
-        except Exception:
-            print("UC8 fails!")
+
+        with freeze_time("2019-9-6"):
+            self.client.post(reverse("auction:bid", args=(1,)), {"new_price": 12}, follow=True)
 
         self.client.logout()
+
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC8")
 
     def test_resolve_auctions(self):
         """
         REQ8.1
         Resolve auctions, return code 200, resolved auctions, list of active auctions should be empty
         """
-        try:
-            # call the resolve function
-            resolve_response = self.client.get(reverse("auction:resolve"))
-            # get the json result
-            if isinstance(resolve_response.content, bytes):
-                result = resolve_response.content.decode("utf-8")
-            else:
-                result = resolve_response.content
-            result = json.loads(result)
+        # call the resolve function
+        resolve_response = self.client.get(reverse("auction:resolve"))
+        # get the json result
+        if isinstance(resolve_response.content, bytes):
+            result = resolve_response.content.decode("utf-8")
+        else:
+            result = resolve_response.content
+        result = json.loads(result)
 
-            browse_response = self.client.get(reverse("auction:index"))
+        browse_response = self.client.get(reverse("auction:index"))
 
-            self.assertEqual(resolve_response.status_code, 200)
-            # check if the auction is not in the list of active auctions
-            self.assertEqual(len(browse_response.context["auctions"]), 0)
-            # check the resolved auctions
-            self.assertEqual(result["resolved_auctions"][0], "item1")
-            self.assertEqual(result["resolved_auctions"][1], "item2")
+        self.assertEqual(resolve_response.status_code, 200)
+        # check if the auction is not in the list of active auctions
+        self.assertEqual(len(browse_response.context["auctions"]), 0)
+        # check the resolved auctions
+        self.assertEqual(result["resolved_auctions"][0], "item1")
+        self.assertEqual(result["resolved_auctions"][1], "item2")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC8")
-        except Exception:
-            print("UC8 fails")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_resolve_auction_and_send_emails(self):
         """
         REQ8.2 & REQ8.3
         Resolve auctions, return code 200, resolved auctions, list of active auctions should be empty, mails in outbox
         """
-        try:
-            # call the resolve function
-            resolve_response = self.client.get(reverse("auction:resolve"))
-            # get the json result
-            if isinstance(resolve_response.content, bytes):
-                result = resolve_response.content.decode("utf-8")
-            else:
-                result = resolve_response.content
-            result = json.loads(result)
+        # call the resolve function
+        resolve_response = self.client.get(reverse("auction:resolve"))
+        # get the json result
+        if isinstance(resolve_response.content, bytes):
+            result = resolve_response.content.decode("utf-8")
+        else:
+            result = resolve_response.content
+        result = json.loads(result)
 
-            browse_response = self.client.get(reverse("auction:index"))
+        browse_response = self.client.get(reverse("auction:index"))
 
-            self.assertEqual(resolve_response.status_code, 200)
-            # check if the auction is not in the list of active auctions
-            self.assertEqual(len(browse_response.context["auctions"]), 0)
-            # check the resolved auctions
-            self.assertEqual(result["resolved_auctions"][0], "item1")
-            self.assertEqual(result["resolved_auctions"][1], "item2")
-            # 2 mails sent to seller after create 2 auctions
-            # 2 mails sent to seller and bidder after bid
-            # 3 mails sent to seller and 2 bidders after resolve
-            self.assertEqual(len(mail.outbox), 7)
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC8")
-        except Exception:
-            print("UC8 fails")
+        self.assertEqual(resolve_response.status_code, 200)
+        # check if the auction is not in the list of active auctions
+        self.assertEqual(len(browse_response.context["auctions"]), 0)
+        # check the resolved auctions
+        self.assertEqual(result["resolved_auctions"][0], "item1")
+        self.assertEqual(result["resolved_auctions"][1], "item2")
+        # 2 mails sent to seller after create 2 auctions
+        # 2 mails sent to seller and bidder after bid
+        # 3 mails sent to seller and 2 bidders after resolve
+        self.assertEqual(len(mail.outbox), 7)
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class ChangeLanguageTests(TestCase):
@@ -1063,22 +968,23 @@ class ChangeLanguageTests(TestCase):
     tests_amount = 2  # number of tests in this suite
     points = 2  # points granted by this use case if all tests pass
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC9")
+
     def test_change_language_to_swedish(self):
         """
         REQ9.1
         Change language to Swedish, response contains message
         """
         lang_code = "sv"
-        try:
-            response = self.client.get(reverse("changeLanguage", args=(lang_code,)))
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Language has been changed to Swedish", response.content)
+        response = self.client.get(reverse("changeLanguage", args=(lang_code,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Language has been changed to Swedish", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC9")
-        except Exception:
-            print("UC9 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_change_language_to_english(self):
         """
@@ -1086,16 +992,12 @@ class ChangeLanguageTests(TestCase):
         Change language to Swedish, response contains message
         """
         lang_code = "en"
-        try:
-            response = self.client.get(reverse("changeLanguage", args=(lang_code,)))
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Language has been changed to English", response.content)
+        response = self.client.get(reverse("changeLanguage", args=(lang_code,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Language has been changed to English", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC9")
-        except Exception:
-            print("UC9 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BidConcurrencyTests(TestCase):
@@ -1145,27 +1047,28 @@ class BidConcurrencyTests(TestCase):
 
         self.client.logout()
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC10")
+
     def test_bid_concurrently(self):
         """
         2 users bid on an auction concurrently, should return conflict message
         """
-        try:
-            # user2 bid on the auction, its bid and version have changed
-            self.client.post(reverse("signin"), self.user2Info)
-            response1 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
+        # user2 bid on the auction, its bid and version have changed
+        self.client.post(reverse("signin"), self.user2Info)
+        response1 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
 
-            # user3 bid on the old version of the auction, conflict happens
-            self.client.post(reverse("signin"), self.user3Info)
-            response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 12})
-            self.assertEqual(response1.status_code, 302)
-            self.assertEqual(response2.status_code, 200)
-            self.assertIn(b"The auction information has been changed", response2.content)
+        # user3 bid on the old version of the auction, conflict happens
+        self.client.post(reverse("signin"), self.user3Info)
+        response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 12})
+        self.assertEqual(response1.status_code, 302)
+        self.assertEqual(response2.status_code, 200)
+        self.assertIn(b"The auction information has been changed", response2.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC10")
-        except Exception:
-            print("UC10 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_on_changed_description_auction(self):
         """
@@ -1175,21 +1078,18 @@ class BidConcurrencyTests(TestCase):
             "title": "item1",
             "description": "new content"
         }
-        try:
-            self.client.post(reverse("signin"), self.user1Info)
-            response1 = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data)
 
-            self.client.post(reverse("signin"), self.user2Info)
-            response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
-            self.assertEqual(response1.status_code, 302)
-            self.assertEqual(response2.status_code, 200)
-            self.assertIn(b"The auction information has been changed", response2.content)
+        self.client.post(reverse("signin"), self.user1Info)
+        response1 = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC10")
-        except Exception:
-            print("UC10 fails!")
+        self.client.post(reverse("signin"), self.user2Info)
+        response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
+        self.assertEqual(response1.status_code, 302)
+        self.assertEqual(response2.status_code, 200)
+        self.assertIn(b"The auction information has been changed", response2.content)
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class ChangeCurrencyTests(TestCase):
@@ -1199,31 +1099,28 @@ class ChangeCurrencyTests(TestCase):
     tests_amount = 2  # number of tests in this suite
     points = 2  # points granted by this use case if all tests pass
 
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC11")
+
     def test_change_currency_to_usd(self):
         currency_code = "USD"
-        try:
-            response = self.client.get(reverse("changeCurrency", args=(currency_code,)), follow=True)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Currency has been changed to USD", response.content)
+        response = self.client.get(reverse("changeCurrency", args=(currency_code,)), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Currency has been changed to USD", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC11")
-        except Exception:
-            print("UC11 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_change_currency_to_eur(self):
         currency_code = "EUR"
-        try:
-            response = self.client.get(reverse("changeCurrency", args=(currency_code,)), follow=True)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn(b"Currency has been changed to EUR", response.content)
+        response = self.client.get(reverse("changeCurrency", args=(currency_code,)), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Currency has been changed to EUR", response.content)
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "UC11")
-        except Exception:
-            print("UC11 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BrowseAndSearchAuctionApiTests(TestCase):
@@ -1267,54 +1164,44 @@ class BrowseAndSearchAuctionApiTests(TestCase):
         # create an admin user
         self.client.post(reverse("signup"), adminInfo)
         self.client.post(reverse("signin"), adminInfo)
-        try:
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
-        except NotImplementedError:
-            print("WS1 fails")
 
+        adm = auth.get_user(self.client)
+        adm.is_superuser = True
+        adm.save()
         # ban 1 item
-        try:
-            self.client.post(reverse("auction:ban", args=(2,)))
-        except ValueError:
-            print("WS1 fails")
+        self.client.post(reverse("auction:ban", args=(2,)))
 
         self.client.logout()
+
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "WS1")
 
     def test_browse_active_auctions(self):
         """
         Browse for active auctions, return a list of active auctions
         """
-        try:
-            response = self.client.get(reverse("browseauctionsapi"))
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data), 1)
-            self.assertEqual(response.data[0]["title"], "item1")
+        response = self.client.get(reverse("browseauctionsapi"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "item1")
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS1")
-        except Exception:
-            print("WS1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_search_for_auctions_by_title(self):
         """
         Search for active auctions by title, return list of active auctions that contain that title
         """
         term = "item1"
+        response = self.client.get(reverse("searchauctionapi", args=(term,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "item1")
 
-        try:
-            response = self.client.get(reverse("searchauctionapi", args=(term,)))
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data), 1)
-            self.assertEqual(response.data[0]["title"], "item1")
-
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS1")
-        except Exception:
-            print("WS1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_search_for_auctions_by_title_with_term(self):
         """
@@ -1323,36 +1210,26 @@ class BrowseAndSearchAuctionApiTests(TestCase):
         args = {
             "term": "item1"
         }
+        response = self.client.get(reverse("searchauctionwithtermapi"), args)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "item1")
 
-        try:
-            response = self.client.get(reverse("searchauctionwithtermapi"), args)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data), 1)
-            self.assertEqual(response.data[0]["title"], "item1")
-
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS1")
-        except Exception:
-            print("WS1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_search_for_auctions_by_id(self):
         """
         Search for active auctions by id, return an auction of that id
         """
         term = "1"
+        response = self.client.get(reverse("searchauctionbyidapi", args=(term,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data["title"], "item1")
 
-        try:
-            response = self.client.get(reverse("searchauctionbyidapi", args=(term,)))
-            self.assertEqual(response.status_code, 200)
-            self.assertIsNotNone(response.data)
-            self.assertEqual(response.data["title"], "item1")
-
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS1")
-        except Exception:
-            print("WS1 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 class BidAuctionApiTests(TestCase):
@@ -1398,42 +1275,41 @@ class BidAuctionApiTests(TestCase):
         # common variables
         self.active_item_id = 1
         self.banned_item_id = 2
-        try:
-            # create a user and an auction
-            self.client.post(reverse("signup"), self.user1Info)
-            self.client.post(reverse("signin"), self.user1Info)
 
-            self.client.post(reverse("auction:create"), activeItemInfo)
-            self.client.post(reverse("auction:create"), bannedItemInfo)
-            # create an admin user
-            self.client.post(reverse("signup"), adminInfo)
-            self.client.post(reverse("signin"), adminInfo)
+        # create a user and an auction
+        self.client.post(reverse("signup"), self.user1Info)
+        self.client.post(reverse("signin"), self.user1Info)
 
-            adm = auth.get_user(self.client)
-            adm.is_superuser = True
-            adm.save()
+        self.client.post(reverse("auction:create"), activeItemInfo)
+        self.client.post(reverse("auction:create"), bannedItemInfo)
+        # create an admin user
+        self.client.post(reverse("signup"), adminInfo)
+        self.client.post(reverse("signin"), adminInfo)
 
-            # ban 1 item
-            self.client.post(reverse("auction:ban", args=(self.banned_item_id,)))
-        except (NotImplementedError, ValueError):
-            print("WS2 fails!")
+        adm = auth.get_user(self.client)
+        adm.is_superuser = True
+        adm.save()
+
+        # ban 1 item
+        self.client.post(reverse("auction:ban", args=(self.banned_item_id,)))
 
         self.client.logout()
+
+    @classmethod
+    def tearDownClass(cls):
+        # check if test case passed or failed
+        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "WS2")
 
     def test_unauthenticated_user_bid(self):
         """
         Unauthenticated user accessing the API, return code 401 and error message
         """
-        try:
-            response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)))
-            self.assertEqual(response.status_code, 401)
-            self.assertIn("Authentication credentials were not provided", response.data["detail"])
+        response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)))
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("Authentication credentials were not provided", response.data["detail"])
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_on_own_auction(self):
         """
@@ -1444,16 +1320,13 @@ class BidAuctionApiTests(TestCase):
         }
         self.client.post(reverse("signin"), self.user1Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
-        try:
-            response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("Cannot bid on own auction", response.data["message"])
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+        response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Cannot bid on own auction", response.data["message"])
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_on_banned_auction(self):
         """
@@ -1465,16 +1338,13 @@ class BidAuctionApiTests(TestCase):
         self.client.post(reverse("signin"), self.user2Info)
         self.client.post(reverse("signup"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
-        try:
-            response = self.client.post(reverse("bidauctionapi", args=(self.banned_item_id,)), data)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("Can only bid on active auction", response.data["message"])
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+        response = self.client.post(reverse("bidauctionapi", args=(self.banned_item_id,)), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Can only bid on active auction", response.data["message"])
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_with_invalid_amount(self):
         """
@@ -1486,16 +1356,13 @@ class BidAuctionApiTests(TestCase):
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
-        try:
-            response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("New bid must be greater than the current bid at least 0.01", response.data["message"])
 
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+        response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("New bid must be greater than the current bid at least 0.01", response.data["message"])
+
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_with_invalid_data(self):
         """
@@ -1507,15 +1374,12 @@ class BidAuctionApiTests(TestCase):
         self.client.post(reverse("signup"), self.user2Info)
         self.client.post(reverse("signin"), self.user2Info)
         self.client.force_authenticate(user=auth.get_user(self.client))
-        try:
-            response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("Bid must be a number", response.data["message"])
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+
+        response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Bid must be a number", response.data["message"])
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
     def test_bid_successfully(self):
         """
@@ -1524,32 +1388,29 @@ class BidAuctionApiTests(TestCase):
         data = {
             "new_price": 12
         }
+        self.client.post(reverse("signup"), self.user2Info)
+        self.client.post(reverse("signin"), self.user2Info)
+        self.client.force_authenticate(user=auth.get_user(self.client))
 
-        try:
-            self.client.post(reverse("signup"), self.user2Info)
-            self.client.post(reverse("signin"), self.user2Info)
-            self.client.force_authenticate(user=auth.get_user(self.client))
+        response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
+        self.assertEqual(response.status_code, 200)
+        # 2 mails sent to seller after create 2 auctions
+        # 1 mail sent to seller after an auction being banned
+        # 2 mails sent to seller and bidder after bid
+        self.assertEqual(len(mail.outbox), 5)
+        self.assertIn("Bid successfully", response.data["message"])
+        self.assertEqual(response.data["title"], "item1")
+        self.assertEqual(response.data["current_price"], 12)
 
-            response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
-            self.assertEqual(response.status_code, 200)
-            # 2 mails sent to seller after create 2 auctions
-            # 1 mail sent to seller after an auction being banned
-            # 2 mails sent to seller and bidder after bid
-            self.assertEqual(len(mail.outbox), 5)
-            self.assertIn("Bid successfully", response.data["message"])
-            self.assertEqual(response.data["title"], "item1")
-            self.assertEqual(response.data["current_price"], 12)
-
-            # calculate points
-            self.__class__.number_of_passed_tests += 1
-            calculate_points(self.__class__.number_of_passed_tests, self.__class__.tests_amount, self.__class__.points, "WS2")
-        except Exception:
-            print("WS2 fails!")
+        # calculate points
+        self.__class__.number_of_passed_tests += 1
 
 
 def calculate_points(number_of_passed_tests, amount_of_tests, points_of_the_use_case, use_case_name):
-    global current_points
-    if number_of_passed_tests == amount_of_tests:
+    if number_of_passed_tests < amount_of_tests:
+        print("{} fails!".format(use_case_name))
+    else:
+        global current_points
         current_points += points_of_the_use_case
         message = "{} passed, {} points, Current points: {}/30".format(use_case_name, points_of_the_use_case, current_points)
         print(message)

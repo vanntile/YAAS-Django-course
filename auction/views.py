@@ -1,8 +1,13 @@
 from django.views import View
+from django.http import HttpResponse
 
 
 def index(request):
-    pass
+    print(request.headers)
+    print("creating response...")
+    html = "<html><body>Hello! <br> <p> This was your request: %s %s <p> sent from the following browser: %s </body></html>" % (
+    request.method, request.path, request.headers['User-Agent'])
+    return HttpResponse(html)
 
 
 def search(request):
