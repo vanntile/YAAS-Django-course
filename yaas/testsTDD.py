@@ -31,7 +31,7 @@ class ExampleTest(TestCase):
         self.assertTrue(True)
 
 
-class SignUpTests(TestCase):
+class UC1_SignUpTests(TestCase):
     """UC1: create user"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -131,45 +131,7 @@ class SignUpTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class SignInTests(TestCase):
-    def setUp(self):
-        userInfo = {
-            "username": "testUser1",
-            "password": "123",
-            "email": "user1@mail.com"
-        }
-        # create a user for testing
-        self.client.post(reverse("signup"), userInfo)
-        self.client.logout()  # because the signup function would signin the user
-
-    def test_sign_in_with_valid_data(self):
-        """
-        Sign in with valid data, should return a authenticated user
-        """
-        userInfo = {
-            "username": "testUser1",
-            "password": "123"
-        }
-
-        self.client.post(reverse("signin"), userInfo)
-        user = auth.get_user(self.client)
-        self.assertTrue(user.is_authenticated)
-
-    def test_sign_in_with_invalid_data(self):
-        """
-        Sign in with invalid data, return an unauthenticated user
-        """
-        userInfo = {
-            "username": "testUser2",
-            "password": "321"
-        }
-
-        self.client.post(reverse("signin"), userInfo)
-        user = auth.get_user(self.client)
-        self.assertFalse(user.is_authenticated)
-
-
-class EditProfileTests(TestCase):
+class UC2_EditProfileTests(TestCase):
     """UC2: edit user"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -261,7 +223,7 @@ class EditProfileTests(TestCase):
 
 
 @override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
-class CreateAuctionTests(TestCase):
+class UC3_CreateAuctionTests(TestCase):
     """UC3: create auction"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -403,7 +365,7 @@ class CreateAuctionTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class EditAuctionTests(TestCase):
+class UC4_EditAuctionTests(TestCase):
     """UC4: edit auction description"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -510,7 +472,7 @@ class EditAuctionTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BrowseAndSearchTests(TestCase):
+class UC5_BrowseAndSearchTests(TestCase):
     """UC5: browse and search auctions"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -569,7 +531,7 @@ class BrowseAndSearchTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BidAuctionTests(TestCase):
+class UC6_BidAuctionTests(TestCase):
     """UC6: bid"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -756,7 +718,7 @@ class BidAuctionTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BanAuctionTests(TestCase):
+class UC7_BanAuctionTests(TestCase):
     """UC7: ban auction"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -850,7 +812,7 @@ class BanAuctionTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class ResolveAuctionTests(TestCase):
+class UC8_ResolveAuctionTests(TestCase):
     """UC8: Resolve auction"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -961,7 +923,7 @@ class ResolveAuctionTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class ChangeLanguageTests(TestCase):
+class UC9_ChangeLanguageTests(TestCase):
     """UC9: Language switching"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -1000,7 +962,7 @@ class ChangeLanguageTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BidConcurrencyTests(TestCase):
+class UC10_BidConcurrencyTests(TestCase):
     """UC10: Concurrency"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -1092,7 +1054,7 @@ class BidConcurrencyTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class ChangeCurrencyTests(TestCase):
+class UC11_ChangeCurrencyTests(TestCase):
     """UC11: Currency exchange"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -1123,7 +1085,7 @@ class ChangeCurrencyTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BrowseAndSearchAuctionApiTests(TestCase):
+class WS1_BrowseAndSearchAuctionApiTests(TestCase):
     """WS1: Browse and Search API"""
 
     number_of_passed_tests = 0  # passed tests in this test case
@@ -1232,7 +1194,8 @@ class BrowseAndSearchAuctionApiTests(TestCase):
         self.__class__.number_of_passed_tests += 1
 
 
-class BidAuctionApiTests(TestCase):
+@override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
+class WS2_BidAuctionApiTests(TestCase):
     """WS2: bid API"""
 
     number_of_passed_tests = 0  # passed tests in this test case
