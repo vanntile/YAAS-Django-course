@@ -22,10 +22,6 @@ to be able to run the project. You can generate a key by using an online generat
 the latter contains project user-defined apps. One can freely add more packages or apps 
 if needed in their appropriate locations.
 
-- `TEMPLATES`, `STATIC_URL` and `STATICFILES_DIRS`: These are kept as default as in Django 
-convention. So, the folder that contains HTML files and the one that contains JS and CSS files 
-name `templates` and `static` respectively.
-
 - `AUTH_PASSWORD_VALIDATORS`: A list of strings for types of password validators. 
 In the beginning, it is empty for the sake of testing.
 
