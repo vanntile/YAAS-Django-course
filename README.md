@@ -11,7 +11,7 @@ There are some attributes in `settings.py` file that you need to pay attention.
 
 `SECRET_KEY`: It is empty in the beginning. It should be unique and you have to generate one 
 to be able to run the project. You can generate a key by using an online generator like this 
-[Djecrety]https://djecrety.ir/; or by the below code in Python console:
+[Djecrety](https://djecrety.ir/); or by the below code in Python console:
 ```
 >>> import random
 >>> ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
@@ -32,7 +32,7 @@ In the beginning, it is empty for the sake of testing.
 ## Structure
 
 The project comes with two apps, auction and user. All required URLs are provided in `urls.py` 
-files of the project and apps. The views.py files have empty functions that are ready 
+files of the project and apps. The `views.py` files have empty functions that are ready 
 to be implemented. 
 
 Students are open to make new apps if they want but they need to make sure to follow the 
