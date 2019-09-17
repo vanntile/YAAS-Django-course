@@ -828,7 +828,9 @@ class BidAuctionTests(TestCase):
 
             response = self.client.post(reverse("auction:bid", args=(self.item1_id,)), bidInfo, follow=True)
             self.assertEqual(response.redirect_chain[0][1], 302)
-            self.assertEqual(len(mail.outbox), 4)  # send 2 emails to seller and bidder
+            # 2 mails sent to seller when create 2 auctions
+            # 2 mails sent to seller and bidder when bid
+            self.assertEqual(len(mail.outbox), 4)
             self.assertContains(response, b"You has bid successfully")
 
             # calculate points
@@ -925,7 +927,10 @@ class BanAuctionTests(TestCase):
 
             self.assertEqual(ban_response.redirect_chain[0][1], 302)  # check redirecting
             self.assertIn(b"Ban successfully", ban_response.content)
-            self.assertEqual(len(mail.outbox), 5)  # notify seller and bidder
+            # 1 mail sent to seller after create auction
+            # 2 mails sent to seller and bidder after bid
+            # 2 other mails sent to seller and bidder to notify it being banned
+            self.assertEqual(len(mail.outbox), 5)
             self.assertEqual(len(browse_response.context["auctions"]), 0)
 
             # calculate points
@@ -994,7 +999,7 @@ class ResolveAuctionTests(TestCase):
         """
         try:
             # call the resolve function
-            resolve_response = self.client.post(reverse("auction:resolve"))
+            resolve_response = self.client.get(reverse("auction:resolve"))
             # get the json result
             if isinstance(resolve_response.content, bytes):
                 result = resolve_response.content.decode("utf-8")
@@ -1024,7 +1029,7 @@ class ResolveAuctionTests(TestCase):
         """
         try:
             # call the resolve function
-            resolve_response = self.client.post(reverse("auction:resolve"))
+            resolve_response = self.client.get(reverse("auction:resolve"))
             # get the json result
             if isinstance(resolve_response.content, bytes):
                 result = resolve_response.content.decode("utf-8")
@@ -1040,7 +1045,9 @@ class ResolveAuctionTests(TestCase):
             # check the resolved auctions
             self.assertEqual(result["resolved_auctions"][0], "item1")
             self.assertEqual(result["resolved_auctions"][1], "item2")
-            # notify seller and bidder
+            # 2 mails sent to seller after create 2 auctions
+            # 2 mails sent to seller and bidder after bid
+            # 3 mails sent to seller and 2 bidders after resolve
             self.assertEqual(len(mail.outbox), 7)
             # calculate points
             self.__class__.number_of_passed_tests += 1
@@ -1525,7 +1532,10 @@ class BidAuctionApiTests(TestCase):
 
             response = self.client.post(reverse("bidauctionapi", args=(self.active_item_id,)), data)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(mail.outbox), 5)  # notify seller and bidder
+            # 2 mails sent to seller after create 2 auctions
+            # 1 mail sent to seller after an auction being banned
+            # 2 mails sent to seller and bidder after bid
+            self.assertEqual(len(mail.outbox), 5)
             self.assertIn("Bid successfully", response.data["message"])
             self.assertEqual(response.data["title"], "item1")
             self.assertEqual(response.data["current_price"], 12)
