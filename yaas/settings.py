@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # example key: '9ab)#s(z-)5gesi5!%5+k8ha4p#vom8k0ma%51-ml^0!l&c!a#'
-SECRET_KEY = ''
+SECRET_KEY = '+r8i5odzj9ot#*y1%(t(&vra8=cfaj_0pvh8bm$&1*2o(yupy4'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -63,7 +63,7 @@ ROOT_URLCONF = 'yaas.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        'DIRS': [os.path.join(BASE_DIR, 'user/templates'), os.path.join(BASE_DIR, 'auction/templates')]
         ,
         'APP_DIRS': True,
         'OPTIONS': {
