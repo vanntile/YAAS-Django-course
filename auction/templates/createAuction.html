@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
+    <title>Create Auction</title>
+</head>
+<body>
+    <h1>Create a new auction</h1>
+    <form action="{% url 'auction:create' %}" method="post">
+        {% csrf_token %}
+        {% if err == 'deadline' %}
+            <p>The deadline date should be at least 72 hours from now</p>
+        {% elif err == 'format' %}
+            <p>Enter a valid date/time. Format is '%d.%m.%Y %H:%M:%S'</p>
+        {% elif err == 'min' %}
+            <p>Ensure this value is greater than or equal to 0.01</p>
+        {% endif %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

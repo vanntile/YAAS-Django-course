@@ -23,7 +23,6 @@ class SignUp(View):
 
             try:
                 User.objects.get(username=cd['username'])
-                print("username taken")
                 return render(request, 'signupform.html', {
                     'form': CreateSignupForm(),
                     'email_taken': False,
