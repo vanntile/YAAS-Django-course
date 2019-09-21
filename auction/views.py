@@ -1,13 +1,10 @@
+from django.shortcuts import render
 from django.views import View
-from django.http import HttpResponse
 
 
-def index(request):
-    print(request.headers)
-    print("creating response...")
-    html = "<html><body>Hello! <br> <p> This was your request: %s %s <p> sent from the following browser: %s </body></html>" % (
-    request.method, request.path, request.headers['User-Agent'])
-    return HttpResponse(html)
+class Index(View):
+    def get(self, request):
+        return render(request, 'index.html', status=200)
 
 
 def search(request):

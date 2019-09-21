@@ -4,7 +4,7 @@ from . import views
 
 app_name = 'auction'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.Index.as_view(), name='index'),
     path('search/', views.search, name='search'),
     path('create/', views.CreateAuction.as_view(), name='create'),
     re_path(r'^edit/(\d+)/$', views.EditAuction.as_view(), name='edit'),

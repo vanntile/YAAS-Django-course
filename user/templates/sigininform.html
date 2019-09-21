@@ -4,17 +4,14 @@
     <meta charset="UTF-8">
     {% load static %}
     <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
-    <title>Signup to YaaS</title>
+    <title>Login to YaaS</title>
 </head>
 <body>
-    <form action="{% url 'signup' %}" method="post">
+    <form action="{% url 'signin' %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        {% if email_taken %}
-            <p>This email has been taken.</p>
-        {% endif %}
-        {% if username_taken %}
-            <p>This username has been taken.</p>
+        {% if wrong %}
+            <p>Wrong username or password.</p>
         {% endif %}
         <input type="submit" value="Submit">
     </form>

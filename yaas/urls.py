@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auction/', include('auction.urls', namespace='auction')),
     path('user/', include('user.urls', namespace='user')),
-    path('', auction.views.index, name='index'),
+    path('', auction.views.Index.as_view(), name='index'),
     path('signup/', user.views.SignUp.as_view(), name='signup'),
     path('signin/', user.views.SignIn.as_view(), name='signin'),
     path('signout/', user.views.signout, name='signout'),

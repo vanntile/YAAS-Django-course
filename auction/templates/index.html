@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
+    <title>YaaS homepage</title>
+</head>
+<body>
+    <a href="{% url 'signup' %}">Signup</a>
+    <a href="{% url 'signin' %}">Login</a>
+    <a href="{% url 'signout' %}">Logout</a>
+</body>
+</html>

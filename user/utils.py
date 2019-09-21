@@ -7,3 +7,7 @@ class CreateSignupForm(forms.Form):
     username = forms.CharField(max_length=64)
     password = forms.CharField(widget=widgets.PasswordInput)
 
+
+class CreateSigninForm(forms.Form):
+    username = forms.CharField(max_length=64)
+    password = forms.CharField(widget=widgets.PasswordInput)

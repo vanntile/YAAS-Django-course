@@ -1,10 +1,11 @@
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
-from django.contrib.auth.models import User
 
-from user.utils import CreateSignupForm
+from user.utils import CreateSignupForm, CreateSigninForm
 
 
 class SignUp(View):
@@ -20,7 +21,6 @@ class SignUp(View):
         if form.is_valid():
             cd = form.cleaned_data
 
-            print("valid_form")
             try:
                 User.objects.get(username=cd['username'])
                 print("username taken")
@@ -43,7 +43,6 @@ class SignUp(View):
 
                     return HttpResponseRedirect(reverse('index'), status=302)
         else:
-            print("invalid")
             return render(request, 'signupform.html', {
                 'form': CreateSignupForm(),
                 'email_taken': False,
@@ -52,11 +51,36 @@ class SignUp(View):
 
 
 class SignIn(View):
-    pass
+    def get(self, request):
+        return render(request, 'sigininform.html', {
+            'form': CreateSigninForm(),
+            'wrong': False
+        }, status=200)
+
+    def post(self, request):
+        form = CreateSigninForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+
+            user = authenticate(username=cd['username'], password=cd['password'])
+            if user is not None:
+                login(request, user)
+                return HttpResponseRedirect(reverse('index'), status=302)
+            else:
+                return render(request, 'sigininform.html', {
+                    'form': CreateSigninForm(),
+                    'wrong': True
+                }, status=401)
+        else:
+            return render(request, 'sigininform.html', {
+                'form': CreateSigninForm(),
+                'wrong': False
+            }, status=401)
 
 
 def signout(request):
-    pass
+    logout(request)
+    return HttpResponseRedirect(reverse('index'), status=302)
 
 
 class EditProfile(View):
