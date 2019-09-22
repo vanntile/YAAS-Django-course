@@ -14,5 +14,19 @@
     {% if user.is_authenticated %}
         <a href="{% url 'auction:create' %}">Create Auction</a>
     {% endif %}
+    <h1>Homepage</h1>
+    <hr>
+    <h2>Auctions</h2>
+    {% for auction in auctionlist %}
+        <h3>{{ auction.title }} <a href="{% url 'auction:edit' auction.id %}">edit</a></h3>
+        <p>{{ auction.description|default_if_none:"no description" }}</p>
+        <p>Minimum price: {{ auction.minimum_price }}</p>
+        <p>Deadline: {{ auction.deadline_date }}</p>
+    {% empty %}
+        {% if user.is_authenticated %}
+            <p>You can be the first to <a href="{% url 'auction:create' %}"> create an auction</a>.</p>
+        {% endif %}
+    {% endfor %}
+
 </body>
 </html>
