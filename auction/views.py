@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -8,9 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.http import require_POST
-import simplejson as json
-from simplejson import JSONDecoder
+from django.views.decorators.http import require_POST, require_GET
 
 from auction.models import AuctionModel
 from utils import *
@@ -152,7 +151,7 @@ def bid(request, auction_id):
 
     auction.highest_bid = amount
     auction.highest_bidder = user.id
-    bidders = JSONDecoder().decode(auction.bidders)
+    bidders = json.loads(auction.bidders)
     bidders.append(user.id)
     auction.bidders = json.dumps(bidders)
     auction.save()
@@ -186,7 +185,7 @@ def ban(request, auction_id):
         return HttpResponseRedirect(reverse('index'), status=302)
 
     auction.status = AuctionModel.BANNED
-    bidders = JSONDecoder().decode(auction.bidders)
+    bidders = json.loads(auction.bidders)
     bidders.append(auction.seller)
     for user_id in bidders:
         send_mail(
@@ -201,8 +200,33 @@ def ban(request, auction_id):
     return HttpResponseRedirect(reverse('auction:success', args=("ban",)), status=302)
 
 
+# @require_GET
 def resolve(request):
-    pass
+    auctions_active = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
+    auctions_resolved = []
+
+    for auction in auctions_active:
+        if auction.deadline_date < datetime.now(timezone.utc):
+            bidders = json.loads(auction.bidders)
+            bidders.append(auction.seller)
+            for user_id in bidders:
+                send_mail(
+                    'Auction banned',
+                    'Auction #' + str(auction.id) + ' has been banned',
+                    'yaas-no-reply@yaas.com',
+                    [User.objects.get(id=user_id).email],
+                    fail_silently=False,
+                )
+            bidders = []
+
+            if auction.highest_bidder == -1:
+                auction.status = AuctionModel.DUE
+            else:
+                auction.status = AuctionModel.ADJUDECATED
+            auction.save()
+            auctions_resolved.append(auction.title)
+
+    return HttpResponse(json.dumps({'resolved_auctions': auctions_resolved}), content_type="application/json", status=200)
 
 
 def changeLanguage(request, lang_code):
