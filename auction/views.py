@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
@@ -13,25 +15,27 @@ from auction.models import AuctionModel
 
 class Index(View):
     def get(self, request):
-        auctionlist = AuctionModel.objects.all()
-        print(auctionlist)
-        return render(request, 'index.html', {'auctionlist': auctionlist}, status=200)
+        auctions = AuctionModel.objects.all()
+        print(auctions)
+        return render(request, 'index.html', {'auctions': auctions}, status=200)
 
 
 def search(request):
-    pass
+    if request.GET['term'].lower() != '':
+        criteria = request.GET['term'].lower().strip()
+        auctions = AuctionModel.objects.filter(title__contains=criteria, status=AuctionModel.ACTIVE)
+    else:
+        auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
+
+    return render(request, "searchresults.html", {'auctions': auctions})
 
 
+@method_decorator(login_required, name='dispatch')
 class CreateAuction(View):
     def get(self, request):
-        if request.user.is_authenticated:
-            return render(request, 'createAuction.html', {'form': CreateAuctionForm()}, status=200)
-        else:
-            return HttpResponseRedirect(reverse('signin'), status=302)
+        return render(request, 'createAuction.html', {'form': CreateAuctionForm()}, status=200)
 
     def post(self, request):
-        if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('signin'), status=302)
         form = CreateAuctionForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
@@ -73,11 +77,9 @@ def success(request, param):
         return HttpResponse("Auction has been created successfully", content_type="text/html", status=200)
 
 
+@method_decorator(login_required, name='dispatch')
 class EditAuction(View):
     def get(self, request, auction_id):
-        if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('signin'), status=302)
-
         user = User.objects.get(username=request.user)
         auction = AuctionModel.objects.get(id=auction_id)
 
@@ -90,9 +92,6 @@ class EditAuction(View):
             }), 'id': auction.id}, status=200)
 
     def post(self, request, auction_id):
-        if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('signin'), status=302)
-
         user = User.objects.get(username=request.user)
         auction = AuctionModel.objects.get(id=auction_id)
 

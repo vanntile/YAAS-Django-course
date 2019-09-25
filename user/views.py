@@ -1,8 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views import View
 
 from user.utils import *
@@ -64,6 +67,7 @@ class SignIn(View):
             user = authenticate(username=cd['username'], password=cd['password'])
             if user is not None:
                 login(request, user)
+                messages.add_message(request, messages.ERROR, "Invalid username or password")
                 return HttpResponseRedirect(reverse('index'), status=302)
             else:
                 return render(request, 'sigininform.html', {
@@ -82,12 +86,10 @@ def signout(request):
     return HttpResponseRedirect(reverse('index'), status=302)
 
 
+@method_decorator(login_required, name='dispatch')
 class EditProfile(View):
     def get(self, request):
-        if request.user.is_authenticated:
-            return render(request, 'profile.html', {'form': CreateEditAccountForm()}, status=200)
-        else:
-            return HttpResponseRedirect(reverse('signin'), status=302)
+        return render(request, 'profile.html', {'form': CreateEditAccountForm()}, status=200)
 
     def post(self, request):
         form = CreateEditAccountForm(request.POST)
