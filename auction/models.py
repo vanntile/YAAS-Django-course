@@ -18,3 +18,6 @@ class AuctionModel(models.Model):
     minimum_price = models.FloatField()
     deadline_date = models.DateTimeField()
     status = models.CharField(max_length=12, choices=STATUSES, default=ACTIVE)
+    highest_bid = models.FloatField(default=0)
+    highest_bidder = models.IntegerField(default=-1)
+    bidders = models.TextField(default="[]")

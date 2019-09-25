@@ -1,33 +1,41 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.core.mail import send_mail
-from django.contrib.auth.models import User
+from django.views.decorators.http import require_POST
+import simplejson as json
+from simplejson import JSONDecoder
 
-from utils import *
 from auction.models import AuctionModel
+from utils import *
 
 
 class Index(View):
     def get(self, request):
-        auctions = AuctionModel.objects.all()
-        print(auctions)
+        auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
         return render(request, 'index.html', {'auctions': auctions}, status=200)
 
 
 def search(request):
     if request.GET['term'].lower() != '':
         criteria = request.GET['term'].lower().strip()
-        auctions = AuctionModel.objects.filter(title__contains=criteria, status=AuctionModel.ACTIVE)
+        if request.user.is_superuser:
+            auctions = AuctionModel.objects.filter(title__contains=criteria)
+        else:
+            auctions = AuctionModel.objects.filter(title__contains=criteria, status=AuctionModel.ACTIVE)
     else:
-        auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
+        if request.user.is_superuser:
+            auctions = AuctionModel.objects.all()
+        else:
+            auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
 
-    return render(request, "searchresults.html", {'auctions': auctions})
+    return render(request, "index.html", {'auctions': auctions, 'search': True}, status=200)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -54,7 +62,8 @@ class CreateAuction(View):
                 return render(request, 'createAuction.html', {'form': form, 'err': 'min'}, status=200)
 
             user = User.objects.get(username=request.user)
-            auction = AuctionModel(seller=user.id, title=cd['title'], description=cd['description'], minimum_price=minimum_price, deadline_date=deadline_date)
+            auction = AuctionModel(seller=user.id, title=cd['title'], description=cd['description'],
+                                   minimum_price=minimum_price, deadline_date=deadline_date, highest_bid=minimum_price)
             auction.save()
 
             send_mail(
@@ -73,8 +82,12 @@ class CreateAuction(View):
 def success(request, param):
     if param == "edit":
         return HttpResponse("Auction has been updated successfully", content_type="text/html", status=200)
-    else:
+    elif param == "create":
         return HttpResponse("Auction has been created successfully", content_type="text/html", status=200)
+    elif param == "bid":
+        return HttpResponse("You has bid successfully", content_type="text/html", status=200)
+    elif param == "ban":
+        return HttpResponse("Ban successfully", content_type="text/html", status=200)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -117,12 +130,75 @@ def edit_auction_error(request):
      You can see all <a href='/'>auctions</a>", content_type="text/html", status=200)
 
 
-def bid(request, item_id):
-    pass
+@require_POST
+@login_required()
+def bid(request, auction_id):
+    user = User.objects.get(username=request.user)
+    auction = AuctionModel.objects.get(id=auction_id)
+    amount = float("{0:.2f}".format(float(request.POST['new_price'])))
+
+    if auction.seller is user.id:
+        return HttpResponse("You cannot bid on your own auctions", content_type="text/html", status=200)
+
+    if auction.status != AuctionModel.ACTIVE:
+        return HttpResponse("You can only bid on active auctions", content_type="text/html", status=200)
+
+    if auction.deadline_date < datetime.now(timezone.utc):
+        return HttpResponse("You can only bid on active auctions", content_type="text/html", status=200)
+
+    if int(amount * 100) < int(auction.highest_bid * 100) + 1:
+        return HttpResponse("New bid must be greater than the current bid for at least 0.01", content_type="text/html",
+                            status=200)
+
+    auction.highest_bid = amount
+    auction.highest_bidder = user.id
+    bidders = JSONDecoder().decode(auction.bidders)
+    bidders.append(user.id)
+    auction.bidders = json.dumps(bidders)
+    auction.save()
+
+    send_mail(
+        'Auction has been bid',
+        'Auction #' + str(auction.id) + ' has a new highest bid',
+        'yaas-no-reply@yaas.com',
+        [User.objects.get(id=auction.seller).email],
+        fail_silently=False,
+    )
+
+    send_mail(
+        'You have bid an auction',
+        'You have the highest bid to auction #' + str(auction.id),
+        'yaas-no-reply@yaas.com',
+        [User.objects.get(id=user.id).email],
+        fail_silently=False,
+    )
+
+    return HttpResponseRedirect(reverse('auction:success', args=("bid",)), status=302)
 
 
-def ban(request, item_id):
-    pass
+@require_POST
+@login_required()
+def ban(request, auction_id):
+    user = User.objects.get(username=request.user)
+    auction = AuctionModel.objects.get(id=auction_id)
+
+    if not user.is_superuser:
+        return HttpResponseRedirect(reverse('index'), status=302)
+
+    auction.status = AuctionModel.BANNED
+    bidders = JSONDecoder().decode(auction.bidders)
+    bidders.append(auction.seller)
+    for user_id in bidders:
+        send_mail(
+            'Auction banned',
+            'Auction #' + str(auction.id) + ' has been banned',
+            'yaas-no-reply@yaas.com',
+            [User.objects.get(id=user_id).email],
+            fail_silently=False,
+        )
+    auction.save()
+
+    return HttpResponseRedirect(reverse('auction:success', args=("ban",)), status=302)
 
 
 def resolve(request):
