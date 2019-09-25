@@ -1,12 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    {% load static %}
-    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
-    <title>Signup to YaaS</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}
+    Signup to YaaS
+{% endblock %}
+
+{% block content %}
+    <h1>Signup</h1>
     <form action="{% url 'signup' %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
@@ -19,5 +18,4 @@
         <input type="submit" value="Submit">
     </form>
     <p>Already have an account? <a href="{% url 'signin' %}">Login</a></p>
-</body>
-</html>
+{% endblock %}

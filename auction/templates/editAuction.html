@@ -1,17 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    {% load static %}
-    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
-    <title>Edit auction</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}
+    Edit auction {{ id }}
+{% endblock %}
+
+{% block content %}
     <h1>Edit Auction #{{ id }}</h1>
     <form action="{% url 'auction:edit' id %}" method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <input type="submit" value="Submit">
     </form>
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    {% if not user.is_authenticated %}
+        <a href="{% url 'signup' %}">Signup</a>
+        <a href="{% url 'signin' %}">Login</a>
+    {% else %}
+        <a href="{% url 'signout' %}">Logout</a>
+        <a href="{% url 'user:user' %}">User profile</a>
+        <a href="{% url 'auction:create' %}">Create Auction</a>
+    {% endif %}
+    <hr>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

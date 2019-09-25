@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    {% load static %}
-    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
-    <title>Create Auction</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}
+    Create Auction
+{% endblock %}
+
+{% block content %}
     <h1>Create a new auction</h1>
     <form action="{% url 'auction:create' %}" method="post">
         {% csrf_token %}
@@ -20,5 +18,4 @@
         {{ form.as_p }}
         <input type="submit" value="Submit">
     </form>
-</body>
-</html>
+{% endblock %}
