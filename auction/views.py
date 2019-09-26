@@ -7,10 +7,13 @@ from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST, require_GET
+from django.utils.translation import gettext as _
 
+import settings
 from auction.models import AuctionModel
 from utils import *
 
@@ -200,7 +203,6 @@ def ban(request, auction_id):
     return HttpResponseRedirect(reverse('auction:success', args=("ban",)), status=302)
 
 
-# @require_GET
 def resolve(request):
     auctions_active = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
     auctions_resolved = []
@@ -217,7 +219,6 @@ def resolve(request):
                     [User.objects.get(id=user_id).email],
                     fail_silently=False,
                 )
-            bidders = []
 
             if auction.highest_bidder == -1:
                 auction.status = AuctionModel.DUE
@@ -229,8 +230,34 @@ def resolve(request):
     return HttpResponse(json.dumps({'resolved_auctions': auctions_resolved}), content_type="application/json", status=200)
 
 
+@require_GET
 def changeLanguage(request, lang_code):
-    pass
+    supported_languages = ['en', 'sv']
+    if lang_code in supported_languages:
+
+        if lang_code == 'en':
+            response = HttpResponse("Language has been changed to English", content_type="text/html", status=200)
+        else:
+            response = HttpResponse("Language has been changed to Swedish", content_type="text/html", status=200)
+
+        if request.user.is_authenticated:
+            user = User.objects.get(username=request.user)
+            user.language.language = lang_code
+            user.save()
+
+        translation.activate(lang_code)
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
+        return response
+    else:
+        return HttpResponseRedirect(reverse('index'), status=302)
+
+    # n = request.REQUEST.get('next', None)
+    # if not n:
+    #     n = request.META.get('HTTP_REFERER', None)
+    # if not n:
+    #     n = '/'
+    # response = HttpResponseRedirect(n)
+    #
 
 
 def changeCurrency(request, currency_code):

@@ -5,9 +5,11 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.views import View
 
+import settings
 from user.utils import *
 
 
@@ -67,8 +69,10 @@ class SignIn(View):
             user = authenticate(username=cd['username'], password=cd['password'])
             if user is not None:
                 login(request, user)
-                messages.add_message(request, messages.ERROR, "Invalid username or password")
-                return HttpResponseRedirect(reverse('index'), status=302)
+                translation.activate(user.language.language)
+                response = HttpResponseRedirect(reverse('index'), status=302)
+                response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user.language.language)
+                return response
             else:
                 return render(request, 'sigininform.html', {
                     'form': CreateSigninForm(),

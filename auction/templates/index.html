@@ -1,34 +1,35 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}
     YaaS homepage
 {% endblock %}
 
 {% block content %}
-    <h1>Homepage</h1>
+    <h1>{% trans "Homepage" %}</h1>
     <hr>
-    <h2>Search auctions</h2>
+    <h2>{% trans "Search auctions" %}</h2>
     <form action="{% url 'auction:search' %}" method="get">
         <input type="text" name="term"/>
-        <button type="submit">Search</button>
+        <button type="submit">{% trans "Search" %}</button>
     </form>
     {% if search %}
-        <h2>Search result auctions:</h2>
+        <h2>{% trans "Search result auctions:" %}</h2>
     {% else %}
-        <h2>Auctions</h2>
+        <h2>{% trans "Auctions" %}</h2>
     {% endif %}
     {% for auction in auctions %}
         <h3>{{ auction.title }}</h3>
         <p>{{ auction.description|default_if_none:"no description" }}</p>
-        <p>Minimum price: {{ auction.minimum_price|stringformat:".2f" }}</p>
-        <p>Highest bid: {{ auction.highest_bid|stringformat:".2f" }}</p>
-        <p>Deadline: {{ auction.deadline_date }}</p>
+        <p>{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}</p>
+        <p>{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}</p>
+        <p>{% trans "Deadline:" %} {{ auction.deadline_date }}</p>
         {% if user.is_authenticated %}
             <p>
-                <a href="{% url 'auction:edit' auction.id %}">Edit auction</a>
+                <a href="{% url 'auction:edit' auction.id %}">{% trans "Edit auction" %}</a>
                 {% if user.is_superuser %}
                     {% if auction.status == 'BN' %}
-                        <p>Auction is banned</p>
+                        <p>{% trans "Auction is banned" %}</p>
                     {% else %}
                         <form action="{% url 'auction:ban' auction.id %}" method="post">
                             {% csrf_token %}

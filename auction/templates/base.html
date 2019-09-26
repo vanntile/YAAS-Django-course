@@ -1,22 +1,30 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-us">
 <head>
     <meta charset="UTF-8">
     <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-{% if not user.is_authenticated %}
-    <a href="{% url 'signup' %}">Signup</a>
-    <a href="{% url 'signin' %}">Login</a>
-{% else %}
-    <p>Username: {{ user.username }} |
+<p>
+    {% if not user.is_authenticated %}
+        <a href="{% url 'signup' %}">Signup</a>
+        <a href="{% url 'signin' %}">Login</a>
+    {% else %}
+        Username: {{ user.username }} |
         <a href="{% url 'signout' %}">Logout</a>
         <a href="{% url 'user:user' %}">User profile</a>
         <a href="{% url 'auction:create' %}">Create Auction</a>
-    </p>
-{% endif %}
+    {% endif %}
+    | {% trans "Language" %}
+    {% ifequal LANGUAGE_CODE "en" %}
+        <a href="{% url 'changeLanguage' lang_code='sv' %}">{% trans "Swedish" %}</a>
+    {% else %}
+        <a href="{% url 'changeLanguage' lang_code='en' %}">{% trans "English" %}</a>
+    {% endifequal %}
+</p>
 <hr>
 {% block content %}
 {% endblock %}
