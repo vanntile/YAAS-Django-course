@@ -21,8 +21,13 @@
     {% for auction in auctions %}
         <h3>{{ auction.title }}</h3>
         <p>{{ auction.description|default_if_none:"no description" }}</p>
-        <p>{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}</p>
-        <p>{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}</p>
+        {% ifequal currency "usd" %}
+            <p>{% trans "Minimum price:" %} ${{ auction.minimum_price|stringformat:".2f" }}</p>
+            <p>{% trans "Highest bid:" %} ${{ auction.highest_bid|stringformat:".2f" }}</p>
+        {% else %}
+            <p>{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}€</p>
+            <p>{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}€</p>
+        {% endifequal %}
         <p>{% trans "Deadline:" %} {{ auction.deadline_date }}</p>
         {% if user.is_authenticated %}
             <p>

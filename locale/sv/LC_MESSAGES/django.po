@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-27 00:09+0300\n"
+"POT-Creation-Date: 2019-09-28 06:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: auction/templates/base.html:21
-msgid "Language"
-msgstr "Språk"
+msgid "Change language to"
+msgstr "Ändra språk till"
 
 #: auction/templates/base.html:23 yaas/settings.py:130
 msgid "Swedish"
@@ -29,6 +29,10 @@ msgstr "svenska"
 #: auction/templates/base.html:25 yaas/settings.py:129
 msgid "English"
 msgstr "engelsk"
+
+#: auction/templates/base.html:27
+msgid "Change currency to"
+msgstr "Ändra valuta till"
 
 #: auction/templates/index.html:9
 msgid "Homepage"
@@ -69,3 +73,6 @@ msgstr "Redigera auktion"
 #: auction/templates/index.html:32
 msgid "Auction is banned"
 msgstr "Auktionen är förbjuden"
+
+#~ msgid "Language"
+#~ msgstr "Språk"

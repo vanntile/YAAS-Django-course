@@ -18,11 +18,17 @@
         <a href="{% url 'user:user' %}">User profile</a>
         <a href="{% url 'auction:create' %}">Create Auction</a>
     {% endif %}
-    | {% trans "Language" %}
+    | {% trans "Change language to" %}
     {% ifequal LANGUAGE_CODE "en" %}
         <a href="{% url 'changeLanguage' lang_code='sv' %}">{% trans "Swedish" %}</a>
     {% else %}
         <a href="{% url 'changeLanguage' lang_code='en' %}">{% trans "English" %}</a>
+    {% endifequal %}
+    | {% trans "Change currency to" %}
+    {% ifequal currency "usd" %}
+        <a href="{% url 'changeCurrency' currency_code='eur' %}">EUR</a>
+    {% else %}
+        <a href="{% url 'changeCurrency' currency_code='usd' %}">USD</a>
     {% endifequal %}
 </p>
 <hr>

@@ -251,16 +251,18 @@ def changeLanguage(request, lang_code):
     else:
         return HttpResponseRedirect(reverse('index'), status=302)
 
-    # n = request.REQUEST.get('next', None)
-    # if not n:
-    #     n = request.META.get('HTTP_REFERER', None)
-    # if not n:
-    #     n = '/'
-    # response = HttpResponseRedirect(n)
-    #
 
-
+@require_GET
 def changeCurrency(request, currency_code):
-    pass
+    supported_currencies = ['eur', 'usd']
+    if currency_code.lower() in supported_currencies:
+        if currency_code.lower() == 'eur':
+            response = HttpResponse("Currency has been changed to EUR", content_type="text/html", status=200)
+        else:
+            response = HttpResponse("Currency has been changed to USD", content_type="text/html", status=200)
 
+        # TODO actually change the currency
+        return response
+    else:
+        return HttpResponseRedirect(reverse('index'), status=302)
 
