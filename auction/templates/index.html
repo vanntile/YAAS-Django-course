@@ -49,7 +49,7 @@
             <form action="{% url 'auction:bid' auction.id %}" method="post">
                 {% csrf_token %}
                 <label>
-                    <input type="number" step="0.01" placeholder="{{ auction.highest_bid }}" name="new_price"/>
+                    <input type="number" step="0.01" placeholder="{{ auction.highest_bid }}€" name="new_price"/>
                 </label>
                 <button type="submit">Bid in auction</button>
             </form>

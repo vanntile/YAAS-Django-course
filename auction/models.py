@@ -21,3 +21,4 @@ class AuctionModel(models.Model):
     highest_bid = models.FloatField(default=0)
     highest_bidder = models.IntegerField(default=-1)
     bidders = models.TextField(default="[]")
+    version = models.IntegerField(default=0)

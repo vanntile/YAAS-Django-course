@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta, timezone
 
+import requests
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core import signing
@@ -15,14 +16,16 @@ from django.views import View
 from django.views.decorators.http import require_POST, require_GET
 
 from auction.models import AuctionModel
-from auction.utils import CreateAuctionForm, EditAuctionForm
-from yaas.settings import LANGUAGE_COOKIE_NAME
+from auction.utils import CreateAuctionForm, EditAuctionForm, set_currencies, generate_response
+from yaas.settings import LANGUAGE_COOKIE_NAME, CURRENCY_API, CURRENCY_COOKIE_NAME
 
 
 class Index(View):
     def get(self, request):
         auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
-        return render(request, 'index.html', {'auctions': auctions}, status=200)
+        currency = set_currencies(request, auctions)
+
+        return render(request, 'index.html', {'auctions': auctions, 'currency': currency}, status=200)
 
 
 def search(request):
@@ -38,7 +41,8 @@ def search(request):
         else:
             auctions = AuctionModel.objects.filter(status=AuctionModel.ACTIVE)
 
-    return render(request, "index.html", {'auctions': auctions, 'search': True}, status=200)
+    currency = set_currencies(request, auctions)
+    return render(request, "index.html", {'auctions': auctions, 'search': True, 'currency': currency}, status=200)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -92,13 +96,13 @@ class CreateAuction(View):
 
 def success(request, param):
     if param == "edit":
-        return HttpResponse("Auction has been updated successfully", content_type="text/html", status=200)
+        return generate_response("Auction has been updated successfully")
     elif param == "create":
-        return HttpResponse("Auction has been created successfully", content_type="text/html", status=200)
+        return generate_response("Auction has been created successfully")
     elif param == "bid":
-        return HttpResponse("You has bid successfully", content_type="text/html", status=200)
+        return generate_response("You has bid successfully")
     elif param == "ban":
-        return HttpResponse("Ban successfully", content_type="text/html", status=200)
+        return generate_response("Ban successfully")
 
 
 @method_decorator(login_required, name='dispatch')
@@ -141,7 +145,7 @@ class EditSigned(View):
         try:
             signed_object = signing.loads(signature)
         except signing.BadSignature:
-            return HttpResponse("You tried to edit a non-existing auction.", content_type="text/html", status=400)
+            return generate_response("You tried to edit a non-existing auction.")
 
         auction = AuctionModel.objects.get(id=signed_object['auction'])
 
@@ -154,7 +158,7 @@ class EditSigned(View):
         try:
             signed_object = signing.loads(signature)
         except signing.BadSignature:
-            return HttpResponse("You tried to edit a non-existing auction.", content_type="text/html", status=400)
+            return generate_response("You tried to edit a non-existing auction.")
 
         auction = AuctionModel.objects.get(id=signed_object['auction'])
         form = EditAuctionForm(request.POST)
@@ -173,8 +177,7 @@ class EditSigned(View):
 
 
 def edit_auction_error(request):
-    return HttpResponse("<p>That is not your auction to edit.</p>\
-     You can see all <a href='/'>auctions</a>", content_type="text/html", status=200)
+    return generate_response("That is not your auction to edit.")
 
 
 @require_POST
@@ -185,17 +188,16 @@ def bid(request, auction_id):
     amount = float("{0:.2f}".format(float(request.POST['new_price'])))
 
     if auction.seller is user.id:
-        return HttpResponse("You cannot bid on your own auctions", content_type="text/html", status=200)
+        return generate_response("You cannot bid on your own auctions")
 
     if auction.status != AuctionModel.ACTIVE:
-        return HttpResponse("You can only bid on active auctions", content_type="text/html", status=200)
+        return generate_response("You can only bid on active auctions")
 
     if auction.deadline_date < datetime.now(timezone.utc):
-        return HttpResponse("You can only bid on active auctions", content_type="text/html", status=200)
+        return generate_response("You can only bid on active auctions")
 
     if int(amount * 100) < int(auction.highest_bid * 100) + 1:
-        return HttpResponse("New bid must be greater than the current bid for at least 0.01", content_type="text/html",
-                            status=200)
+        return generate_response("New bid must be greater than the current bid for at least 0.01")
 
     auction.highest_bid = amount
     auction.highest_bidder = user.id
@@ -282,9 +284,9 @@ def changeLanguage(request, lang_code):
     if lang_code in supported_languages:
 
         if lang_code == 'en':
-            response = HttpResponse("Language has been changed to English", content_type="text/html", status=200)
+            response = generate_response("Language has been changed to English")
         else:
-            response = HttpResponse("Language has been changed to Swedish", content_type="text/html", status=200)
+            response = generate_response("Language has been changed to Swedish")
 
         if request.user.is_authenticated:
             user = User.objects.get(username=request.user)
@@ -303,11 +305,14 @@ def changeCurrency(request, currency_code):
     supported_currencies = ['eur', 'usd']
     if currency_code.lower() in supported_currencies:
         if currency_code.lower() == 'eur':
-            response = HttpResponse("Currency has been changed to EUR", content_type="text/html", status=200)
+            response = generate_response("Currency has been changed to EUR")
+            response.set_cookie(CURRENCY_COOKIE_NAME, "0")
         else:
-            response = HttpResponse("Currency has been changed to USD", content_type="text/html", status=200)
+            response = requests.get(CURRENCY_API)
+            rate = response.json()['quotes']['USDEUR']
+            response = generate_response("Currency has been changed to USD")
+            response.set_cookie(CURRENCY_COOKIE_NAME, rate)
 
-        # TODO actually change the currency
         return response
     else:
         return HttpResponseRedirect(reverse('index'), status=302)

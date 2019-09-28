@@ -134,6 +134,10 @@ LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
 
 LANGUAGE_COOKIE_NAME = 'lang'
 
+CURRENCY_API = "http://apilayer.net/api/live?access_key=b664c2891885f7be74bd7782d577b8f8&currencies=EUR,USD&format=1"
+
+CURRENCY_COOKIE_NAME = 'RATE'
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
