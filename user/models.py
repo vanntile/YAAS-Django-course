@@ -10,12 +10,12 @@ class Language(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_user_language(sender, instance, created, **kwargs):
+def create_user_language(_, instance, created, **kwargs):
     if created:
         Language.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
-def save_user_language(sender, instance, **kwargs):
+def save_user_language(_, instance, **kwargs):
     instance.language.save()
 

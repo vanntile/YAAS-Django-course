@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -9,8 +8,8 @@ from django.utils import translation
 from django.utils.decorators import method_decorator
 from django.views import View
 
-import settings
 from user.utils import *
+from yaas.settings import LANGUAGE_COOKIE_NAME
 
 
 class SignUp(View):
@@ -71,7 +70,7 @@ class SignIn(View):
                 login(request, user)
                 translation.activate(user.language.language)
                 response = HttpResponseRedirect(reverse('index'), status=302)
-                response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user.language.language)
+                response.set_cookie(LANGUAGE_COOKIE_NAME, user.language.language)
                 return response
             else:
                 return render(request, 'sigininform.html', {

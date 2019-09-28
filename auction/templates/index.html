@@ -10,7 +10,9 @@
     <hr>
     <h2>{% trans "Search auctions" %}</h2>
     <form action="{% url 'auction:search' %}" method="get">
-        <input type="text" name="term"/>
+        <label>
+            <input type="text" name="term"/>
+        </label>
         <button type="submit">{% trans "Search" %}</button>
     </form>
     {% if search %}
@@ -46,7 +48,9 @@
 
             <form action="{% url 'auction:bid' auction.id %}" method="post">
                 {% csrf_token %}
-                <input type="number" step="0.01" placeholder="{{ auction.highest_bid }}" name="new_price"/>
+                <label>
+                    <input type="number" step="0.01" placeholder="{{ auction.highest_bid }}" name="new_price"/>
+                </label>
                 <button type="submit">Bid in auction</button>
             </form>
         {% endif %}

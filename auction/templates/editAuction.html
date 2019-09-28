@@ -7,7 +7,11 @@
 
 {% block content %}
     <h1>Edit Auction #{{ id }}</h1>
-    <form action="{% url 'auction:edit' id %}" method="post">
+    {% if secret %}
+        <form action="{% url 'auction:edit_signed' secret %}" method="post">
+    {% else %}
+        <form action="{% url 'auction:edit' id %}" method="post">
+    {% endif %}
         {% csrf_token %}
         {{ form.as_p }}
         <input type="submit" value="Submit">

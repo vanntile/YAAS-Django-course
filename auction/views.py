@@ -1,21 +1,22 @@
+import json
 from datetime import datetime, timedelta, timezone
 
-import json
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core import signing
+from django.core.mail import send_mail, EmailMessage
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import translation
 from django.utils.decorators import method_decorator
+from django.utils.timezone import make_aware
 from django.views import View
 from django.views.decorators.http import require_POST, require_GET
-from django.utils.translation import gettext as _
 
-import settings
 from auction.models import AuctionModel
-from utils import *
+from auction.utils import CreateAuctionForm, EditAuctionForm
+from yaas.settings import LANGUAGE_COOKIE_NAME
 
 
 class Index(View):
@@ -65,16 +66,24 @@ class CreateAuction(View):
 
             user = User.objects.get(username=request.user)
             auction = AuctionModel(seller=user.id, title=cd['title'], description=cd['description'],
-                                   minimum_price=minimum_price, deadline_date=deadline_date, highest_bid=minimum_price)
+                                   minimum_price=minimum_price, deadline_date=make_aware(deadline_date),
+                                   highest_bid=minimum_price)
             auction.save()
 
-            send_mail(
+            signed_url = request.get_host() + reverse('auction:edit_signed', args=(signing.dumps({
+                "username": user.username,
+                "auction": auction.id
+            }),))
+
+            msg = EmailMessage(
                 'Auction has been created successfully',
-                'Auction has been created successfully.',
+                'Auction has been created successfully. This is the link to your <a href="' +
+                signed_url + '">auction</a>',
                 'yaas-no-reply@yaas.com',
-                [User.objects.get(username=request.user).email],
-                fail_silently=False,
+                [User.objects.get(username=request.user).email]
             )
+            msg.content_subtype = "html"
+            msg.send()
 
             return HttpResponseRedirect(reverse('auction:success', args=("create",)), status=302)
         else:
@@ -121,10 +130,46 @@ class EditAuction(View):
 
                 return HttpResponseRedirect(reverse('auction:success', args=("edit",)), status=302)
             else:
-                render(request, 'editAuction.html', {'form': EditAuctionForm(initial={
+                return render(request, 'editAuction.html', {'form': EditAuctionForm(initial={
                     'title': auction.title,
                     'description': auction.description
                 }), 'id': auction.id}, status=200)
+
+
+class EditSigned(View):
+    def get(self, request, signature):
+        try:
+            signed_object = signing.loads(signature)
+        except signing.BadSignature:
+            return HttpResponse("You tried to edit a non-existing auction.", content_type="text/html", status=400)
+
+        auction = AuctionModel.objects.get(id=signed_object['auction'])
+
+        return render(request, 'editAuction.html', {'form': EditAuctionForm(initial={
+            'title': auction.title,
+            'description': auction.description
+        }), 'secret': signature}, status=200)
+
+    def post(self, request, signature):
+        try:
+            signed_object = signing.loads(signature)
+        except signing.BadSignature:
+            return HttpResponse("You tried to edit a non-existing auction.", content_type="text/html", status=400)
+
+        auction = AuctionModel.objects.get(id=signed_object['auction'])
+        form = EditAuctionForm(request.POST)
+
+        if form.is_valid():
+            cd = form.cleaned_data
+            auction.description = cd['description']
+            auction.save()
+
+            return HttpResponseRedirect(reverse('auction:success', args=("edit",)), status=302)
+        else:
+            return render(request, 'editAuction.html', {'form': EditAuctionForm(initial={
+                'title': auction.title,
+                'description': auction.description
+            }), 'secret': signature}, status=200)
 
 
 def edit_auction_error(request):
@@ -227,7 +272,8 @@ def resolve(request):
             auction.save()
             auctions_resolved.append(auction.title)
 
-    return HttpResponse(json.dumps({'resolved_auctions': auctions_resolved}), content_type="application/json", status=200)
+    return HttpResponse(json.dumps({'resolved_auctions': auctions_resolved}), content_type="application/json",
+                        status=200)
 
 
 @require_GET
@@ -246,7 +292,7 @@ def changeLanguage(request, lang_code):
             user.save()
 
         translation.activate(lang_code)
-        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
+        response.set_cookie(LANGUAGE_COOKIE_NAME, lang_code)
         return response
     else:
         return HttpResponseRedirect(reverse('index'), status=302)
@@ -265,4 +311,3 @@ def changeCurrency(request, currency_code):
         return response
     else:
         return HttpResponseRedirect(reverse('index'), status=302)
-
