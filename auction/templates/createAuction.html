@@ -6,8 +6,19 @@
 {% endblock %}
 
 {% block content %}
+    <script type="text/javascript">
+        let form = document.getElementById('form');
+
+        function clicked() {
+           if (confirm('Do you want to submit?')) {
+               form.submit();
+           } else {
+               return false;
+           }
+        }
+    </script>
     <h1>Create a new auction</h1>
-    <form action="{% url 'auction:create' %}" method="post">
+    <form id="form" action="{% url 'auction:create' %}" method="post">
         {% csrf_token %}
         {% if err == 'deadline' %}
             <p>The deadline date should be at least 72 hours from now</p>
@@ -17,6 +28,6 @@
             <p>Ensure this value is greater than or equal to 0.01</p>
         {% endif %}
         {{ form.as_p }}
-        <input type="submit" value="Submit">
+        <input type="submit" onclick="clicked()" value="Submit">
     </form>
 {% endblock %}
