@@ -6,57 +6,81 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{% trans "Homepage" %}</h1>
+    <div class="col-md-4">
+        <h1>{% trans "Homepage" %}</h1>
+    </div>
     <hr>
-    <h2>{% trans "Search auctions" %}</h2>
-    <form action="{% url 'auction:search' %}" method="get">
-        <label>
-            <input type="text" name="term"/>
-        </label>
-        <button type="submit">{% trans "Search" %}</button>
-    </form>
-    {% if search %}
-        <h2>{% trans "Search result auctions:" %}</h2>
-    {% else %}
-        <h2>{% trans "Auctions" %}</h2>
-    {% endif %}
-    {% for auction in auctions %}
-        <h3>{{ auction.title }}</h3>
-        <p>{{ auction.description|default_if_none:"no description" }}</p>
-        {% ifequal currency "usd" %}
-            <p>{% trans "Minimum price:" %} ${{ auction.minimum_price|stringformat:".2f" }}</p>
-            <p>{% trans "Highest bid:" %} ${{ auction.highest_bid|stringformat:".2f" }}</p>
+    <div class="col-md-4">
+        <h2>{% trans "Search auctions" %}</h2>
+        <form class="input-group mb-3" action="{% url 'auction:search' %}" method="get">
+            <input type="text" name="term" class="form-control" placeholder="Auction title terms"
+                   aria-label="Auction title terms">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit">{% trans "Search" %}</button>
+            </div>
+        </form>
+        {% if search %}
+            <h2>{% trans "Search result auctions:" %}</h2>
         {% else %}
-            <p>{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}€</p>
-            <p>{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}€</p>
-        {% endifequal %}
-        <p>{% trans "Deadline:" %} {{ auction.deadline_date }}</p>
-        {% if user.is_authenticated %}
-            <p>
-                <a href="{% url 'auction:edit' auction.id %}">{% trans "Edit auction" %}</a>
-                {% if user.is_superuser %}
-                    {% if auction.status == 'BN' %}
-                        <p>{% trans "Auction is banned" %}</p>
-                    {% else %}
-                        <form action="{% url 'auction:ban' auction.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit">Ban auction</button>
-                        </form>
-                    {% endif %}
-                {% endif %}
-            </p>
+            <h2>{% trans "Auctions" %}</h2>
+        {% endif %}
+    </div>
 
-            <form action="{% url 'auction:bid' auction.id %}" method="post">
-                {% csrf_token %}
-                <label>
-                    <input type="number" step="0.01" placeholder="{{ auction.highest_bid }}€" name="new_price"/>
-                </label>
-                <button type="submit">Bid in auction</button>
-            </form>
-        {% endif %}
-    {% empty %}
-        {% if user.is_authenticated %}
-            <p>You can be the first to <a href="{% url 'auction:create' %}"> create an auction</a>.</p>
-        {% endif %}
-    {% endfor %}
+    <div class="row">
+        {% for auction in auctions %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card my-3 shadow bd-callout">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ auction.title }}</h4>
+                        <p class="card-text">{{ auction.description|default_if_none:"no description" }}</p>
+                        {% ifequal currency "usd" %}
+                            <p class="card-text">{% trans "Minimum price:" %}
+                                ${{ auction.minimum_price|stringformat:".2f" }}</p>
+                            <p class="card-text">{% trans "Highest bid:" %}
+                                ${{ auction.highest_bid|stringformat:".2f" }}</p>
+                        {% else %}
+                            <p class="card-text">{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}€</p>
+                            <p class="card-text">{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}€</p>
+                        {% endifequal %}
+                        <p class="card-text">{% trans "Deadline:" %} {{ auction.deadline_date }}</p>
+                        {% if user.is_authenticated %}
+                            <div class="mt-4">
+                                <a class="btn btn-light"
+                                   href="{% url 'auction:edit' auction.id %}">{% trans "Edit auction" %}</a>
+                                {% if user.is_superuser %}
+                                    {% if auction.status == 'BN' %}
+                                        <p>{% trans "Auction is banned" %}</p>
+                                    {% else %}
+                                        <form class="d-inline float-right" action="{% url 'auction:ban' auction.id %}"
+                                              method="post">
+                                            {% csrf_token %}
+                                            <button class="btn btn-danger" type="submit">Ban auction</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                        {% if user.is_authenticated %}
+                            <div class="card-footer text-muted">
+                                <form class="input-group" action="{% url 'auction:bid' auction.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="number" name="new_price" step="0.01" class="form-control"
+                                           placeholder="{{ auction.highest_bid }}€" aria-label="New bid"/>
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-outline-success">Bid in auction</button>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            {% if user.is_authenticated %}
+                <div class="col-md-4">
+                    <p>You can be the first to <a href="{% url 'auction:create' %}"> create an auction</a>.</p>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 {% endblock %}
