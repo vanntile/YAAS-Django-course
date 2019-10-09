@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import serializers
@@ -17,6 +18,12 @@ class CreateAuctionForm(forms.Form):
 class EditAuctionForm(forms.Form):
     title = forms.CharField(max_length=256, label="Do not edit the title")
     description = forms.CharField(max_length=3000, widget=forms.Textarea(attrs={'cols': 50}))
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'username')
 
 
 class AuctionSerializer(serializers.ModelSerializer):

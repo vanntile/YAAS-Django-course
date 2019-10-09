@@ -39,4 +39,6 @@ urlpatterns += [
             name='searchauctionwithtermapi'),
     re_path(r'^api/v1/searchid/(\d+)/$', auction.services.SearchAuctionApiById.as_view(), name='searchauctionbyidapi'),
     re_path(r'^api/v1/bid/(\d+)/$', auction.services.BidAuctionApi.as_view(), name='bidauctionapi'),
+
+    path('generatedata', auction.services.GenerateDataAPI.as_view(), name="generatedataapi")
 ]

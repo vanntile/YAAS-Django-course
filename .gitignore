@@ -212,3 +212,6 @@ fabric.properties
 # User added ignores
 .idea/
 .env/
+
+Web*.pdf
+YaaS*.pdf

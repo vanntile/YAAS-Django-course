@@ -31,7 +31,7 @@ class SignUp(View):
                     'form': CreateSignupForm(),
                     'email_taken': False,
                     'username_taken': True
-                }, status=400)
+                }, status=200)
             except User.DoesNotExist:
                 try:
                     User.objects.get(email=cd['email'])
@@ -39,7 +39,7 @@ class SignUp(View):
                         'form': CreateSignupForm(),
                         'email_taken': True,
                         'username_taken': False
-                    }, status=400)
+                    }, status=200)
                 except User.DoesNotExist:
                     user = User.objects.create_user(cd['username'], cd['email'], cd['password'])
                     user.save()

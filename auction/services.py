@@ -1,12 +1,17 @@
 import json
 
+import requests
 from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 
 from auction.models import AuctionModel
-from auction.utils import AuctionSerializer
+from auction.utils import AuctionSerializer, UserSerializer
 
 
 class BrowseAuctionApi(APIView):
@@ -47,20 +52,15 @@ class SearchAuctionApiById(APIView):
         return Response(AuctionSerializer(auction).data, status=200)
 
 
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
 class BidAuctionApi(APIView):
     def post(self, request, auction_id):
-        try:
-            user = User.objects.get(username=request.user)
-        except User.DoesNotExist:
-            user = None
-
+        user = User.objects.get(username=request.user)
         auction = AuctionModel.objects.get(id=auction_id)
 
         if auction.status != AuctionModel.ACTIVE:
             return Response({"message": "Can only bid on active auction"}, status=400)
-
-        if not user or not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided"}, status=401)
 
         if auction.seller is request.user.id:
             return Response({"message": "Cannot bid on own auction"}, status=400)
@@ -107,3 +107,25 @@ class BidAuctionApi(APIView):
         }
 
         return Response(response, status=200)
+
+
+class GenerateDataAPI(APIView):
+    def get(self, request):
+        usernames_prefix = ['edwin_elric', 'lelouch', 'kira', 'natsu', 'luffy', 'kakashi', 'goku']
+        usernames_suffix = ['', '11', '42', '7', '1000', '4k', '420']
+        usernames = ['vanntile']
+        for prefix in usernames_prefix:
+            for suffix in usernames_suffix:
+                usernames.append(prefix + suffix)
+
+        for username in usernames:
+            response = requests.post('http://' + request.get_host() + reverse('user:user'), {
+                'email': username + '@yaas.com',
+                'username': username,
+                'password': username
+            })
+            print(response.status_code)
+
+        users = User.objects.all()
+
+        return Response(UserSerializer(users, many=True).data, status=200)
