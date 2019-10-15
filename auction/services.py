@@ -1,17 +1,21 @@
 import json
+import re
+from datetime import datetime
+from random import choice, randint
 
-import requests
 from django.contrib.auth.models import User
-from django.urls import reverse
+from django.core.mail import send_mail
+from django.shortcuts import render
+from django.utils import timezone
+from django.views import View
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.mail import send_mail
 
 from auction.models import AuctionModel
-from auction.utils import AuctionSerializer, UserSerializer
+from auction.utils import AuctionSerializer
 
 
 class BrowseAuctionApi(APIView):
@@ -109,23 +113,56 @@ class BidAuctionApi(APIView):
         return Response(response, status=200)
 
 
-class GenerateDataAPI(APIView):
+class GenerateDataAPI(View):
     def get(self, request):
+        products_str = "Bacon pork belly bacon short ribs tenderloin strip steak landjaeger biltong meatball flank, " \
+                       "kielbasa shank.  Spare ribs venison sirloin short loin pork loin tri-tip, pork chop pork " \
+                       "belly tongue.  Beef doner pork chop alcatra cupim.  Pastrami short ribs boudin, corned beef " \
+                       "leberkas ribeye buffalo filet mignon prosciutto rump tongue sausage beef ribs bresaola cow. "
+        products = re.split('\W+', products_str)
+
+        timestamp = '_' + str(datetime.now().timestamp())[3:10]
+        deadline_date = timezone.now() + timezone.timedelta(hours=73)
+
         usernames_prefix = ['edwin_elric', 'lelouch', 'kira', 'natsu', 'luffy', 'kakashi', 'goku']
         usernames_suffix = ['', '11', '42', '7', '1000', '4k', '420']
-        usernames = ['vanntile']
+        usernames = ['vanntile' + timestamp]
+
+        users = []
+        auctions = []
+
         for prefix in usernames_prefix:
             for suffix in usernames_suffix:
-                usernames.append(prefix + suffix)
+                usernames.append(prefix + suffix + timestamp)
 
+        # create users
         for username in usernames:
-            response = requests.post('http://' + request.get_host() + reverse('user:user'), {
-                'email': username + '@yaas.com',
-                'username': username,
-                'password': username
-            })
-            print(response.status_code)
+            user = User.objects.create_user(username, username + '@yaas.com', username)
+            user.save()
+            users.append(user)
 
-        users = User.objects.all()
+            # create auctions
+            for i in range(1, randint(1, 5)):
+                description = ''.join(choice(products_str) for j in range(randint(50, 300)))
+                price = randint(1, 100)
+                auction = AuctionModel(seller=user.id, title=choice(products), description=description,
+                                       minimum_price=price, deadline_date=deadline_date, highest_bid=price)
+                auction.save()
+                auctions.append(auction)
 
-        return Response(UserSerializer(users, many=True).data, status=200)
+        # create bids
+        for i in range(randint(15, 40)):
+            user = User.objects.get(id=randint(users[0].id, users[-1].id))
+            auction = AuctionModel.objects.get(id=randint(auctions[0].id, auctions[-1].id))
+
+            auction.highest_bid = auction.highest_bid + randint(10, 100)
+            auction.highest_bidder = user.id
+            bidders = json.loads(auction.bidders)
+            bidders.append(user.id)
+            auction.bidders = json.dumps(bidders)
+            auction.save()
+
+        return render(request, 'generateData.html', {
+            'users': users,
+            'auctions': auctions
+        }, status=200)

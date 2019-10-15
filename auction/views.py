@@ -260,7 +260,7 @@ def resolve(request):
             bidders.append(auction.seller)
             for user_id in bidders:
                 send_mail(
-                    'Auction banned',
+                    'Auction resolved',
                     'Auction #' + str(auction.id) + ' has been banned',
                     'yaas-no-reply@yaas.com',
                     [User.objects.get(id=user_id).email],
