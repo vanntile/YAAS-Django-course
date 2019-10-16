@@ -83,4 +83,17 @@
             {% endif %}
         {% endfor %}
     </div>
+
+    <div class="row pt-5">
+        <div class="col-md-4">
+            <h2>{% trans "Generate data" %}</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <p>{% trans "You can generate data automatically by clicking" %}
+                <a class="btn btn-sm btn-primary" href="{% url 'generatedataapi' %}">{% trans "here" %}</a>
+            </p>
+        </div>
+    </div>
 {% endblock %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-09-28 06:44+0000\n"
+"POT-Creation-Date: 2019-10-16 09:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,61 +18,73 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: auction/templates/base.html:21
+#: auction/templates/base.html:37
 msgid "Change language to"
 msgstr "Ändra språk till"
 
-#: auction/templates/base.html:23 yaas/settings.py:130
+#: auction/templates/base.html:41 yaas/settings.py:130
 msgid "Swedish"
 msgstr "svenska"
 
-#: auction/templates/base.html:25 yaas/settings.py:129
+#: auction/templates/base.html:43 yaas/settings.py:129
 msgid "English"
 msgstr "engelsk"
 
-#: auction/templates/base.html:27
+#: auction/templates/base.html:47
 msgid "Change currency to"
 msgstr "Ändra valuta till"
 
-#: auction/templates/index.html:9
+#: auction/templates/index.html:10
 msgid "Homepage"
 msgstr "Hemsida"
 
-#: auction/templates/index.html:11
+#: auction/templates/index.html:14
 msgid "Search auctions"
 msgstr "Sök auktioner"
 
-#: auction/templates/index.html:14
+#: auction/templates/index.html:19
 msgid "Search"
 msgstr "Sök"
 
-#: auction/templates/index.html:17
+#: auction/templates/index.html:23
 msgid "Search result auctions:"
 msgstr "Sökresultatauktioner:"
 
-#: auction/templates/index.html:19
+#: auction/templates/index.html:25
 msgid "Auctions"
 msgstr "Auktioner"
 
-#: auction/templates/index.html:24
+#: auction/templates/index.html:37 auction/templates/index.html:42
 msgid "Minimum price:"
 msgstr "Lägsta pris:"
 
-#: auction/templates/index.html:25
+#: auction/templates/index.html:39 auction/templates/index.html:43
 msgid "Highest bid:"
 msgstr "Högsta bud:"
 
-#: auction/templates/index.html:26
+#: auction/templates/index.html:45
 msgid "Deadline:"
 msgstr "Tidsfrist:"
 
-#: auction/templates/index.html:29
+#: auction/templates/index.html:49
 msgid "Edit auction"
 msgstr "Redigera auktion"
 
-#: auction/templates/index.html:32
+#: auction/templates/index.html:52
 msgid "Auction is banned"
 msgstr "Auktionen är förbjuden"
+
+#: auction/templates/index.html:89
+msgid "Generate data"
+msgstr "Generera data"
+
+#: auction/templates/index.html:94
+msgid "You can generate data automatically by clicking"
+msgstr "Du kan generera data automatiskt genom att klicka"
+
+#: auction/templates/index.html:95
+msgid "here"
+msgstr "här"
 
 #~ msgid "Language"
 #~ msgstr "Språk"
