@@ -130,6 +130,7 @@ class EditAuction(View):
             if form.is_valid():
                 cd = form.cleaned_data
                 auction.description = cd['description']
+                auction.version = auction.version + 1
                 auction.save()
 
                 return HttpResponseRedirect(reverse('auction:success', args=("edit",)), status=302)
@@ -166,6 +167,7 @@ class EditSigned(View):
         if form.is_valid():
             cd = form.cleaned_data
             auction.description = cd['description']
+            auction.version = auction.version + 1
             auction.save()
 
             return HttpResponseRedirect(reverse('auction:success', args=("edit",)), status=302)
@@ -180,12 +182,15 @@ def edit_auction_error(request):
     return generate_response("That is not your auction to edit.")
 
 
-@require_POST
 @login_required()
 def bid(request, auction_id):
     user = User.objects.get(username=request.user)
     auction = AuctionModel.objects.get(id=auction_id)
     amount = float("{0:.2f}".format(float(request.POST['new_price'])))
+
+    if "version" in request.POST:
+        if int(request.POST["version"]) != auction.version:
+            return render(request, 'bidVersioning.html', {'auction': auction}, status=200)
 
     if auction.seller is user.id:
         return generate_response("You cannot bid on your own auctions")
@@ -204,6 +209,7 @@ def bid(request, auction_id):
     bidders = json.loads(auction.bidders)
     bidders.append(user.id)
     auction.bidders = json.dumps(bidders)
+    auction.version = auction.version + 1
     auction.save()
 
     send_mail(
