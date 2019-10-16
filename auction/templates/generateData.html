@@ -6,57 +6,67 @@
 {% endblock %}
 
 {% block content %}
-    <div class="col-md-12">
-        <h1>Generate data automatically</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Generate data automatically</h1>
+        </div>
     </div>
     <hr>
-    <div class="col-md-12">
-        <p>We have generated the following {{ users|length }} users.</p>
-        <table class="table table-striped table-hover">
-            <thead class="thead-light">
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">username</th>
-                <th scope="col">email</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for user in users %}
+    <div class="row">
+        <div class="col-md-12">
+            <p>We have generated the following {{ users|length }} users.</p>
+            <table class="table table-striped table-hover">
+                <thead class="thead-light">
                 <tr>
-                    <th scope="row">{{ user.id }}</th>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
+                    <th scope="col">ID</th>
+                    <th scope="col">username</th>
+                    <th scope="col">email</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <p>We have generated the following {{ auctions|length }} auctions.</p>
-        <table class="table table-striped">
-            <thead class="thead-light">
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Seller</th>
-                <th scope="col">Title</th>
-                <th scope="col">Description</th>
-                <th scope="col">Minimum price</th>
-                <th scope="col">Bid</th>
-                <th scope="col">Deadline date</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for auction in auctions %}
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <th scope="row">{{ user.id }}</th>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p>We have generated the following {{ auctions|length }} auctions.</p>
+            <table class="table table-striped">
+                <thead class="thead-light">
                 <tr>
-                    <th scope="row">{{ auction.id }}</th>
-                    <td>{{ auction.seller }}</td>
-                    <td>{{ auction.title }}</td>
-                    <td>{{ auction.description|slice:":35" }}</td>
-                    <td>{{ auction.minimum_price }}</td>
-                    <td>{{ auction.highest_bid }}</td>
-                    <td>{{ auction.deadline_date }}</td>
+                    <th scope="col">ID</th>
+                    <th scope="col">Seller</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Minimum price</th>
+                    <th scope="col">Bid</th>
+                    <th scope="col">Deadline date</th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <p>And some of the auctions have bids.</p>
+                </thead>
+                <tbody>
+                {% for auction in auctions %}
+                    <tr>
+                        <th scope="row">{{ auction.id }}</th>
+                        <td>{{ auction.seller }}</td>
+                        <td>{{ auction.title }}</td>
+                        <td>{{ auction.description|slice:":35" }}</td>
+                        <td>{{ auction.minimum_price }}</td>
+                        <td>{{ auction.highest_bid }}</td>
+                        <td>{{ auction.deadline_date }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p>And some of the auctions have bids.</p>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <p>You can go back <a class="btn btn-sm btn-outline-primary" href="{% url 'index' %}">home</a></p>
+        </div>
     </div>
 {% endblock %}
