@@ -1,8 +1,5 @@
-# YaaS - DSSWA 2019
-
-## Student details
-- Name: Valentin Ionita
-- Student number: 1900842
+# YaaS
+Yet Another Auctioning Service is a Django-experimentation project done as a 2019 assignment at Abo Akademi University for a Server Side Development course.
 
 ## Implemented requirements
 - UC1: create user
