@@ -1,6 +1,6 @@
 certifi==2019.9.11
 chardet==3.0.4
-Django==2.2.5
+Django==2.2.10
 djangorestframework==3.10.2
 freezegun==0.3.12
 idna==2.8
