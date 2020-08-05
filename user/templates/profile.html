@@ -1,0 +1,35 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <script src="{% static 'bootstrap.min.js' %}"></script>
+    <title>User profile</title>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector('#editMode').setAttribute("style", "display:none");
+
+            document.querySelector('#edit').addEventListener("click", () => {
+                document.querySelector('#default').setAttribute("style", "display:none");
+                document.querySelector('#editMode').setAttribute("style", "display:block");
+            })
+        });
+    </script>
+</head>
+<body>
+    <h1>My profile</h1>
+    <form id="editMode" action="{% url 'user:editprofile' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Submit">
+    </form>
+    <div id="default">
+        <p>Username: {{ user.username }}</p>
+        <p>Email: {{ user.email }}</p>
+        <button type="button" id="edit">Edit profile</button>
+    </div>
+</body>
+</html>

@@ -1,73 +1,44 @@
-# 2019-web-services-project-skeleton
+# YaaS
+Yet Another Auctioning Service is a Django-experimentation project done as a 2019 assignment at Abo Akademi University for a Server Side Development course.
 
-This is a tutorial how to setup and use the framework.
+## Implemented requirements
+- UC1: create user
+- UC2: edit user
+- UC3: create auction
+- UC4: edit auction description
+- UC5: Browse & Search
+- UC6: bid
+- UC7: ban auction
+- UC8: resolve auction
+- UC9: language switching
+- UC10: concurrency (verified manually in two browser sessions)
+- UC11: currency exchange
+- WS1: Browse & Search API
+- WS2: Bid api
+- REQ9.3: store language preference
+- REQ3.5: send seller auction link 1
+- TREQ4.1.1 test REQ9.3
+- TREQ4.1.2 test for REQ3.5
+- TREQ4.2: implement data generation program (verified manually)
 
-## Settings
+## Browsers used to test
+- Firefox Quantum 69.0.2 (64-bit) 
+- Chromium 77 for Ubuntu 18.04
 
-First thing first, you need to check all packages in the `requirements.txt` file. 
-They should be automatically detected and installed by Python Interpreter.
-
-There are some attributes in `settings.py` file that you need to pay attention.
-
-- `SECRET_KEY`: It is empty in the beginning. It should be unique and you have to generate one 
-to be able to run the project. You can generate a key by using an online generator like this 
-[Djecrety](https://djecrety.ir/); or by the below code in Python console:
+## Dependencies
+```bash
+> pip freeze
+certifi==2019.9.11
+chardet==3.0.4
+Django==2.2.5
+djangorestframework==3.10.2
+freezegun==0.3.12
+idna==2.8
+pkg-resources==0.0.0
+python-dateutil==2.8.0
+pytz==2019.2
+requests==2.22.0
+six==1.12.0
+sqlparse==0.3.0
+urllib3==1.25.5
 ```
->>> import random
->>> ''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50))
-```
-
-- `INSTALLED_APPS`: A list of strings of used packages and apps in this project. It is split into 
-`PREREQ_APPS` and `PROJECT_APPS` for clarity reasons. The former consists of Django packages and 
-the latter contains project user-defined apps. One can freely add more packages or apps 
-if needed in their appropriate locations.
-
-- `AUTH_PASSWORD_VALIDATORS`: A list of strings for types of password validators. 
-In the beginning, it is empty for the sake of testing.
-
-## Structure
-
-The project comes with two apps, auction and user. All required URLs are provided in `urls.py` 
-files of the project and apps. The routes of `urls` can be changed if wanted but the `name` and 
-`namespace` are not allowed to change. The `views.py` files have empty functions that are ready 
-to be implemented. You are open to create new apps if you want, just make sure followwing
-the structure.
-
-## Tests
-
-In the inner Yaas directory, there is `testsTDD.py` containing all the tests. Students are not 
-allowed to make any change to this file. If you want to create your own tests, you should 
-create a file named `test*.py` and write tests in there because Python 3 automatically discover 
-tests in any file with that name when running. There are several ways to run the tests from 
-PyCharm or commands:
-
-- PyCharm:
-    * Choose the test file and click the Run button on the Toolbar.
-    * Press `Ctrl-Alt-R` (for Window).
-    * Right click on the file and then Run tests.
-    * Click a run button at the beginning of a test case or a test to run them specifically.
-- `manage.py` commands:
-```
-# Run all the tests
-$ ./manage.py test
-
-# Run all the tests found within the 'auction' package
-$ ./manage.py test auction
-
-# Run all the tests in the yaas.testsTDD module
-$ ./manage.py test yaas.testsTDD
-
-# Run just one test case
-$ ./manage.py test yaas.testsTDD.SignUpTests
-
-# Run just one test method
-$ ./manage.py test yaas.testsTDD.SignUpTests.test_sign_up_with_valid_data
-```
-
-## Automated grading
-
-During the implementation, students can run the tests frequently to check what features they 
-have done and how many points they currently have. Each use case from the requirements is a 
-test case, they will give a message after they are run, and only when all tests of a test case 
-pass, students can receive points granted by it. The result message should be something similar 
-to this: `UC1 passed, 1 point, Current points: 1/30`.

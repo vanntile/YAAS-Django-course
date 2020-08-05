@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+    Auction {{ auction.title }} has changed
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <h1>"{{ auction.title }}" has changed</h1>
+            <p>While you were bidding, the auction description or latest bid was updated. These are its latest
+                details.</p>
+            <p>You can still bid if you want to.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-lg-4">
+            <div class="card my-3 shadow bd-callout">
+                <div class="card-body">
+                    <h4 class="card-title">{{ auction.title }}</h4>
+                    <p class="card-text">{{ auction.description|default_if_none:"no description" }}</p>
+                    <p>Auction version {{ auction.version }}</p>
+                    {% ifequal currency "usd" %}
+                        <p class="card-text">{% trans "Minimum price:" %}
+                            ${{ auction.minimum_price|stringformat:".2f" }}</p>
+                        <p class="card-text">{% trans "Highest bid:" %}
+                            ${{ auction.highest_bid|stringformat:".2f" }}</p>
+                    {% else %}
+                        <p class="card-text">{% trans "Minimum price:" %} {{ auction.minimum_price|stringformat:".2f" }}€</p>
+                        <p class="card-text">{% trans "Highest bid:" %} {{ auction.highest_bid|stringformat:".2f" }}€</p>
+                    {% endifequal %}
+                    <p class="card-text">{% trans "Deadline:" %} {{ auction.deadline_date }}</p>
+                </div>
+                {% if user.is_authenticated %}
+                    <div class="card-footer text-muted">
+                        <form class="input-group" action="{% url 'auction:bid' auction.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="version" value="{{ auction.version }}" />
+                            <input type="number" name="new_price" step="0.01" class="form-control"
+                                   placeholder="{{ auction.highest_bid|stringformat:".2f" }}€" aria-label="New bid"/>
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-outline-success">Bid in auction</button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

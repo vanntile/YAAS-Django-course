@@ -88,7 +88,7 @@ class UC1_SignUpTests(TestCase):
     def test_sign_up_with_invalid_username(self):
         """
         REQ1.1
-        Sign up with already taken username, should return status code 400.
+        Sign up with already taken username, should return status code 200.
         """
         context = {
             "username": "testUser1",
@@ -99,7 +99,7 @@ class UC1_SignUpTests(TestCase):
         response1 = self.client.post(reverse("signup"), context)
         # create another user with the same username
         response2 = self.client.post(reverse("signup"), context)
-        self.assertEqual(response2.status_code, 400)
+        self.assertEqual(response2.status_code, 200)
         self.assertIn(b"This username has been taken", response2.content)
 
         # calculate points
@@ -108,7 +108,7 @@ class UC1_SignUpTests(TestCase):
     def test_sign_up_with_invalid_email(self):
         """
         REQ1.1
-        Sign up with already taken email, should return status code 400.
+        Sign up with already taken email, should return status code 200.
         """
         user1Info = {
             "username": "testUser1",
@@ -124,7 +124,7 @@ class UC1_SignUpTests(TestCase):
         response1 = self.client.post(reverse("signup"), user1Info)
         # create another user with the same username
         response2 = self.client.post(reverse("signup"), user2Info)
-        self.assertEqual(response2.status_code, 400)
+        self.assertEqual(response2.status_code, 200)
         self.assertIn(b"This email has been taken", response2.content)
 
         # calculate points
@@ -221,148 +221,149 @@ class UC2_EditProfileTests(TestCase):
         # calculate points
         self.__class__.number_of_passed_tests += 1
 
-
-@override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
-class UC3_CreateAuctionTests(TestCase):
-    """UC3: create auction"""
-
-    number_of_passed_tests = 0  # passed tests in this test case
-    tests_amount = 6  # number of tests in this suite
-    points = 1  # points granted by this use case if all tests pass
-
-    def setUp(self):
-        self.userInfo = {
-            "username": "testUser1",
-            "password": "123",
-            "email": "user1@mail.com"
-        }
-        # create a user for testing
-        self.client.post(reverse("signup"), self.userInfo)
-        self.client.logout()  # because the signup function would signin the user
-
-    @classmethod
-    def tearDownClass(cls):
-        # check if test case passed or failed
-        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC3")
-
-    def test_get_create_auction_form(self):
-        """
-        REQ3.1
-        Get create auction form, return code 200
-        """
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.get(reverse("auction:create"))
-        self.assertEqual(response.status_code, 200)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_unauthenticated_user(self):
-        """
-        REQ3.1
-        Create an auction with an unauthenticated user, should return a redirection status.
-        """
-        response = self.client.post(reverse("auction:create"))
-        self.assertEqual(response.status_code, 302)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_invalid_deadline_date(self):
-        """
-        REQ3.2
-        Create auction with deadline date is earlier than current date, show error message
-        """
-        data = {
-            "title": "newItem",
-            "description": "something",
-            "minimum_price": 10,
-            "deadline_date": (timezone.now() - timezone.timedelta(hours=24)).strftime("%d.%m.%Y %H:%M:%S")  # 1 day ago
-        }
-
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.post(reverse("auction:create"), data, follow=True)
-        self.assertIn(b"The deadline date should be at least 72 hours from now", response.content)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_invalid_deadline_date_format(self):
-        """
-        REQ3.2
-        Create auction with invalid deadline date format, return error message
-        """
-        data = {
-            "title": "newItem",
-            "description": "something",
-            "minimum_price": 10,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y")
-        }
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.post(reverse("auction:create"), data, follow=True)
-        self.assertIn(b"Enter a valid date/time", response.content)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_invalid_minimum_price(self):
-        """
-        REQ3.2
-        Create auction with invalid minimum price, the auction should not be created, response contains error message
-        """
-        data = {
-            "title": "newItem",
-            "description": "something",
-            "minimum_price": 0,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
-        }
-
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.post(reverse("auction:create"), data, follow=True)
-        self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_valid_data(self):
-        """
-        REQ3.2
-        Create auction with valid data, show success message.
-        """
-        data = {
-            "title": "newItem",
-            "description": "something",
-            "minimum_price": 10,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
-        }
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.post(reverse("auction:create"), data, follow=True)
-        self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
-        self.assertContains(response, b"Auction has been created successfully")
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_create_auction_with_sending_email(self):
-        """
-        Create auction with valid data and user has an email, show success message and an email is in outbox.
-        """
-        data = {
-            "title": "newItem",
-            "description": "something",
-            "minimum_price": 10,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
-        }
-        self.client.post(reverse("signin"), self.userInfo)
-        response = self.client.post(reverse("auction:create"), data, follow=True)
-
-        self.assertEqual(len(mail.outbox), 1)  # notify seller
-        self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
-        self.assertContains(response, b"Auction has been created successfully")
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
+# ''' WILL BE CHECKED MANUALLY
+# @override_settings(LANGUAGE_CODE='en-US', LANGUAGES=(('en', 'English'),))
+# class UC3_CreateAuctionTests(TestCase):
+#     """UC3: create auction"""
+#
+#     number_of_passed_tests = 0  # passed tests in this test case
+#     tests_amount = 7  # number of tests in this suite
+#     points = 3  # points granted by this use case if all tests pass
+#
+#     def setUp(self):
+#         self.userInfo = {
+#             "username": "testUser1",
+#             "password": "123",
+#             "email": "user1@mail.com"
+#         }
+#         # create a user for testing
+#         self.client.post(reverse("signup"), self.userInfo)
+#         self.client.logout()  # because the signup function would signin the user
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         # check if test case passed or failed
+#         calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC3")
+#
+#     def test_get_create_auction_form(self):
+#         """
+#         REQ3.1
+#         Get create auction form, return code 200
+#         """
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.get(reverse("auction:create"))
+#         self.assertEqual(response.status_code, 200)
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_unauthenticated_user(self):
+#         """
+#         REQ3.1
+#         Create an auction with an unauthenticated user, should return a redirection status.
+#         """
+#         response = self.client.post(reverse("auction:create"))
+#         self.assertEqual(response.status_code, 302)
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_invalid_deadline_date(self):
+#         """
+#         REQ3.2
+#         Create auction with deadline date is earlier than current date, show error message
+#         """
+#         data = {
+#             "title": "newItem",
+#             "description": "something",
+#             "minimum_price": 10,
+#             "deadline_date": (timezone.now() - timezone.timedelta(hours=24)).strftime("%d.%m.%Y %H:%M:%S")  # 1 day ago
+#         }
+#
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.post(reverse("auction:create"), data, follow=True)
+#         self.assertIn(b"The deadline date should be at least 72 hours from now", response.content)
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_invalid_deadline_date_format(self):
+#         """
+#         REQ3.2
+#         Create auction with invalid deadline date format, return error message
+#         """
+#         data = {
+#             "title": "newItem",
+#             "description": "something",
+#             "minimum_price": 10,
+#             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y")
+#         }
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.post(reverse("auction:create"), data, follow=True)
+#         self.assertIn(b"Enter a valid date/time", response.content)
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_invalid_minimum_price(self):
+#         """
+#         REQ3.2
+#         Create auction with invalid minimum price, the auction should not be created, response contains error message
+#         """
+#         data = {
+#             "title": "newItem",
+#             "description": "something",
+#             "minimum_price": 0,
+#             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
+#         }
+#
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.post(reverse("auction:create"), data, follow=True)
+#         self.assertIn(b"Ensure this value is greater than or equal to 0.01", response.content)
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_valid_data(self):
+#         """
+#         REQ3.2
+#         Create auction with valid data, show success message.
+#         """
+#         data = {
+#             "title": "newItem",
+#             "description": "something",
+#             "minimum_price": 10,
+#             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
+#         }
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.post(reverse("auction:create"), data, follow=True)
+#         self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
+#         self.assertContains(response, b"Auction has been created successfully")
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+#
+#     def test_create_auction_with_sending_email(self):
+#         """
+#         REQ3.4
+#         Create auction with valid data and user has an email, show success message and an email is in outbox.
+#         """
+#         data = {
+#             "title": "newItem",
+#             "description": "something",
+#             "minimum_price": 10,
+#             "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
+#         }
+#         self.client.post(reverse("signin"), self.userInfo)
+#         response = self.client.post(reverse("auction:create"), data, follow=True)
+#
+#         self.assertEqual(len(mail.outbox), 1)  # notify seller
+#         self.assertEqual(response.redirect_chain[0][1], 302)  # check redirect
+#         self.assertContains(response, b"Auction has been created successfully")
+#
+#         # calculate points
+#         self.__class__.number_of_passed_tests += 1
+# '''
 
 class UC4_EditAuctionTests(TestCase):
     """UC4: edit auction description"""
@@ -977,98 +978,6 @@ class UC9_ChangeLanguageTests(TestCase):
         response = self.client.get(reverse("changeLanguage", args=(lang_code,)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Language has been changed to English", response.content)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-
-class UC10_BidConcurrencyTests(TestCase):
-    """UC10: Concurrency"""
-
-    number_of_passed_tests = 0  # passed tests in this test case
-    tests_amount = 2  # number of tests in this suite
-    points = 2  # points granted by this use case if all tests pass
-
-    def setUp(self):
-        self.user1Info = {
-            "username": "testUser1",
-            "password": "123",
-            "email": "user1@mail.com"
-        }
-
-        self.user2Info = {
-            "username": "testUser2",
-            "password": "321",
-            "email": "user2@mail.com"
-        }
-
-        self.user3Info = {
-            "username": "testUser3",
-            "password": "213",
-            "email": "user3@mail.com"
-        }
-
-        activeItemInfo = {
-            "title": "item1",
-            "description": "something",
-            "minimum_price": 10,
-            "deadline_date": (timezone.now() + timezone.timedelta(days=5)).strftime("%d.%m.%Y %H:%M:%S")
-        }
-
-        # create user1 and use it to create an auction
-        self.client.post(reverse("signup"), self.user1Info)
-        self.client.post(reverse("signin"), self.user1Info)
-        self.client.post(reverse("auction:create"), activeItemInfo)
-
-        # create 2 other users to test concurrent requests
-        self.client.post(reverse("signup"), self.user2Info)
-        self.client.post(reverse("signup"), self.user3Info)
-
-        # common variables
-        self.auction_id = 1
-
-        self.client.logout()
-
-    @classmethod
-    def tearDownClass(cls):
-        # check if test case passed or failed
-        calculate_points(cls.number_of_passed_tests, cls.tests_amount, cls.points, "UC10")
-
-    def test_bid_concurrently(self):
-        """
-        2 users bid on an auction concurrently, should return conflict message
-        """
-        # user2 bid on the auction, its bid and version have changed
-        self.client.post(reverse("signin"), self.user2Info)
-        response1 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
-
-        # user3 bid on the old version of the auction, conflict happens
-        self.client.post(reverse("signin"), self.user3Info)
-        response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 12})
-        self.assertEqual(response1.status_code, 302)
-        self.assertEqual(response2.status_code, 200)
-        self.assertIn(b"The auction information has been changed", response2.content)
-
-        # calculate points
-        self.__class__.number_of_passed_tests += 1
-
-    def test_bid_on_changed_description_auction(self):
-        """
-        An auction has a change in description while bidding, should return conflict message
-        """
-        data = {
-            "title": "item1",
-            "description": "new content"
-        }
-
-        self.client.post(reverse("signin"), self.user1Info)
-        response1 = self.client.post(reverse("auction:edit", args=(self.auction_id,)), data)
-
-        self.client.post(reverse("signin"), self.user2Info)
-        response2 = self.client.post(reverse("auction:bid", args=(self.auction_id,)), {"new_price": 15})
-        self.assertEqual(response1.status_code, 302)
-        self.assertEqual(response2.status_code, 200)
-        self.assertIn(b"The auction information has been changed", response2.content)
 
         # calculate points
         self.__class__.number_of_passed_tests += 1

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}
+    Signup to YaaS
+{% endblock %}
+
+{% block content %}
+    <h1>Signup</h1>
+    <form action="{% url 'signup' %}" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        {% if email_taken %}
+            <p>This email has been taken.</p>
+        {% endif %}
+        {% if username_taken %}
+            <p>This username has been taken.</p>
+        {% endif %}
+        <input type="submit" value="Submit">
+    </form>
+    <p>Already have an account? <a href="{% url 'signin' %}">Login</a></p>
+{% endblock %}

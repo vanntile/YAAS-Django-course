@@ -1,0 +1,61 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicons/favicon.ico' %}"/>
+    <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+<div class="container pt-2 pb-5 mb-5">
+    <ul class="nav nav-pills nav-fill mt-3 mb-5">
+        {% if not user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link active" href="{% url 'signin' %}">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+            </li>
+        {% else %}
+            <li class="nav-item">
+                <span class="nav-link active">Username: {{ user.username }}</span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'user:user' %}">User profile</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'auction:create' %}">Create Auction</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'signout' %}">Logout</a>
+            </li>
+        {% endif %}
+        <li class="nav-item text-secondary ml-5" style="line-height: 2.4em">
+            {% trans "Change language to" %}
+        </li>
+        <li class="nav-item">
+            {% ifequal LANGUAGE_CODE "en" %}
+                <a class="nav-link active bg-secondary" href="{% url 'changeLanguage' lang_code='sv' %}">{% trans "Swedish" %}</a>
+            {% else %}
+                <a class="nav-link active bg-secondary" href="{% url 'changeLanguage' lang_code='en' %}">{% trans "English" %}</a>
+            {% endifequal %}
+        </li>
+        <li class="nav-item text-secondary ml-5" style="line-height: 2.4em">
+            {% trans "Change currency to" %}
+        </li>
+        <li class="nav-item">
+            {% ifequal currency "usd" %}
+                <a class="nav-link active bg-secondary" href="{% url 'changeCurrency' currency_code='eur' %}">EUR</a>
+            {% else %}
+                <a class="nav-link active bg-secondary" href="{% url 'changeCurrency' currency_code='usd' %}">USD</a>
+            {% endifequal %}
+        </li>
+    </ul>
+    {% block content %}
+    {% endblock %}
+</div>
+</body>
+</html>

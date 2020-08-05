@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from django.urls import reverse_lazy
+from django.utils.translation import ugettext_lazy as _
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -27,6 +30,9 @@ SECRET_KEY = ''
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# Email mocking
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 # Application definition
@@ -51,6 +57,7 @@ INSTALLED_APPS = PREREQ_APPS + PROJECT_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -63,7 +70,7 @@ ROOT_URLCONF = 'yaas.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        'DIRS': [os.path.join(BASE_DIR, 'user/templates'), os.path.join(BASE_DIR, 'auction/templates')]
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -72,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n'
             ],
         },
     },
@@ -117,6 +125,19 @@ AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = 'en-us'
 
+LANGUAGES = [  # Available languages
+    ('en', _("English")),
+    ('sv', _("Swedish"))
+]
+
+LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
+
+LANGUAGE_COOKIE_NAME = 'lang'
+
+CURRENCY_API = ""
+
+CURRENCY_COOKIE_NAME = 'RATE'
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -132,3 +153,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+LOGIN_URL = reverse_lazy("signin")

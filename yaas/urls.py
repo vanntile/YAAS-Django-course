@@ -13,17 +13,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path, re_path, include
 from django.contrib import admin
-import user.views
-import auction.views
+from django.urls import path, re_path, include
+
 import auction.services
+import auction.views
+import user.views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auction/', include('auction.urls', namespace='auction')),
     path('user/', include('user.urls', namespace='user')),
-    path('', auction.views.index, name='index'),
+    path('', auction.views.Index.as_view(), name='index'),
     path('signup/', user.views.SignUp.as_view(), name='signup'),
     path('signin/', user.views.SignIn.as_view(), name='signin'),
     path('signout/', user.views.signout, name='signout'),
@@ -34,7 +35,10 @@ urlpatterns = [
 urlpatterns += [
     path('api/v1/browse/', auction.services.BrowseAuctionApi.as_view(), name='browseauctionsapi'),
     re_path(r'^api/v1/search/(\w+)/?$', auction.services.SearchAuctionApi.as_view(), name='searchauctionapi'),
-    re_path(r'^api/v1/search/\??(?:&?[^=&]*=[^=&]*)*', auction.services.SearchAuctionWithTermApi.as_view(), name='searchauctionwithtermapi'),
+    re_path(r'^api/v1/search/\??(?:&?[^=&]*=[^=&]*)*', auction.services.SearchAuctionWithTermApi.as_view(),
+            name='searchauctionwithtermapi'),
     re_path(r'^api/v1/searchid/(\d+)/$', auction.services.SearchAuctionApiById.as_view(), name='searchauctionbyidapi'),
     re_path(r'^api/v1/bid/(\d+)/$', auction.services.BidAuctionApi.as_view(), name='bidauctionapi'),
+
+    path('generatedata', auction.services.GenerateDataAPI.as_view(), name="generatedataapi")
 ]

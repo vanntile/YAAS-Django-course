@@ -208,3 +208,10 @@ fabric.properties
 .idea/sonarlint
 
 # End of https://www.gitignore.io/api/django,pycharm
+
+# User added ignores
+.idea/
+.env/
+
+Web*.pdf
+YaaS*.pdf
